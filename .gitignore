@@ -11,6 +11,11 @@ Thumbs.db
 *.swp
 *.swo
 
+# Environment variables (GÜVENLİK: Bu dosyalarda API anahtarları var!)
+.env
+.env.local
+.env*.local
+
 # Logs
 *.log
 npm-debug.log*
