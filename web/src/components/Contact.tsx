@@ -1,34 +1,35 @@
 'use client'
 
-import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react'
+import { Mail, Phone, MapPin, Facebook, Instagram, Linkedin, MessageCircle, Youtube } from 'lucide-react'
 
 export default function Contact() {
   const contactInfo = [
     {
       icon: <Phone className="w-6 h-6" />,
       title: 'Telefon',
-      value: '+90 (XXX) XXX XX XX',
-      link: 'tel:+90XXXXXXXXXX',
+      value: '0544 949 71 18',
+      link: 'tel:+905449497118',
     },
     {
       icon: <Mail className="w-6 h-6" />,
       title: 'E-posta',
-      value: 'info@iyilikkervani.org',
-      link: 'mailto:info@iyilikkervani.org',
+      value: 'iyilikkervanid@gmail.com',
+      link: 'mailto:iyilikkervanid@gmail.com',
     },
     {
       icon: <MapPin className="w-6 h-6" />,
       title: 'Adres',
-      value: 'Gebze, Kocaeli, Türkiye',
-      link: '#',
+      value: 'Yavuz Selim, Ankara Cd, 108/B, 41400 Gebze/Kocaeli',
+      link: 'https://www.google.com.tr/maps/place/%C4%B0Y%C4%B0L%C4%B0K+KERVANI+GEBZE/@40.8102881,29.3899874,17z/data=!3m1!4b1!4m6!3m5!1s0x14cadfd55e725935:0xcbb549915c5c08d7!8m2!3d40.8102881!4d29.3899874!16s%2Fg%2F11gh_2rk8m?entry=ttu&g_ep=EgoyMDI1MTIwOS4wIKXMDSoASAFQAw%3D%3D',
     },
   ]
 
   const socialMedia = [
-    { icon: <Facebook />, link: '#', name: 'Facebook' },
-    { icon: <Twitter />, link: '#', name: 'Twitter' },
-    { icon: <Instagram />, link: '#', name: 'Instagram' },
-    { icon: <Linkedin />, link: '#', name: 'LinkedIn' },
+    { icon: <Facebook />, link: 'https://www.facebook.com/iyilik.kervan.gul', name: 'Facebook' },
+    { icon: <Instagram />, link: 'https://www.instagram.com/iyilikkervani_dernegi/', name: 'Instagram' },
+    { icon: <Youtube />, link: 'https://www.youtube.com/@iyilikkervaniasiyegul8416', name: 'YouTube' },
+    { icon: <MessageCircle />, link: 'https://api.whatsapp.com/send/?phone=905449497118&text&type=phone_number&app_absent=0', name: 'WhatsApp' },
+    { icon: <Linkedin />, link: 'https://www.linkedin.com/feed/?trk=guest_homepage-basic_google-one-tap-submit', name: 'LinkedIn' },
   ]
 
   return (
@@ -98,19 +99,15 @@ export default function Contact() {
             </h3>
             <div className="space-y-6">
               <div>
-                <div className="text-white/70 text-sm mb-2">Banka Adı</div>
-                <div className="text-white font-semibold text-lg">XXX Bankası</div>
-              </div>
-              <div>
-                <div className="text-white/70 text-sm mb-2">Hesap Adı</div>
-                <div className="text-white font-semibold text-lg">
-                  İyilik Kervanı Derneği
+                <div className="text-white/70 text-sm mb-2">IBAN</div>
+                <div className="text-white font-mono text-xl font-bold bg-white/10 p-4 rounded-xl border border-white/20">
+                  TR00 1234 5678 9012 3456 7890 12
                 </div>
               </div>
               <div>
-                <div className="text-white/70 text-sm mb-2">IBAN</div>
-                <div className="text-white font-mono text-sm bg-white/10 p-4 rounded-xl border border-white/20">
-                  TR00 0000 0000 0000 0000 0000 00
+                <div className="text-white/70 text-sm mb-2">Hesap Adı</div>
+                <div className="text-white font-bold text-2xl">
+                  İyilik Kervanı Derneği
                 </div>
               </div>
               <div className="pt-4 border-t border-white/20">

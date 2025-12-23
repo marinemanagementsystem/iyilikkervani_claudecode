@@ -1,5 +1,6 @@
 {
   "permissions": {
+    "defaultMode": "bypassPermissions",
     "allow": [
       "Bash(git clone:*)",
       "Bash(npx create-next-app:*)",
@@ -43,7 +44,14 @@
       "Bash(npx expo start)",
       "Bash(npx expo start:*)",
       "Bash(git remote:*)",
-      "Bash(del:*)"
+      "Bash(del:*)",
+      "Bash(git rm:*)",
+      "Bash(copy \"c:\\\\SELDA\\\\imobil\\\\picture\\\\ekip.jpeg\" \"c:\\\\SELDA\\\\imobil\\\\web\\\\public\\\\images\\\\ekip.jpeg\")",
+      "Bash(claude mcp add:*)",
+      "Bash(ls:*)",
+      "Bash(node test-supabase.js:*)",
+      "Bash(nslookup:*)",
+      "Bash(ping:*)"
     ],
     "deny": [],
     "ask": []

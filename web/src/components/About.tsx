@@ -68,7 +68,7 @@ export default function About() {
               <div className="absolute inset-0 bg-gradient-to-br from-primary to-accent rounded-3xl transform rotate-3" />
               <div className="relative bg-white rounded-3xl overflow-hidden shadow-2xl">
                 <img
-                  src="/images/hakkimizda.jpeg"
+                  src="/images/ekip.jpeg"
                   alt="Hakkımızda"
                   className="w-full h-96 object-cover"
                   onError={(e) => {
