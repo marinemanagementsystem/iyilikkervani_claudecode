@@ -1,0 +1,7 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Handle 404
+  ErrorDocument 404 /404.html
+</IfModule>

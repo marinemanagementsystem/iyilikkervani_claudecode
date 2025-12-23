@@ -32,7 +32,18 @@
       "Bash(%PATH%)",
       "Bash(powershell -ExecutionPolicy Bypass -File C:SELDAimobilbuild_apk.ps1)",
       "Bash(./gradlew.bat:*)",
-      "Bash(tee:*)"
+      "Bash(tee:*)",
+      "Bash(curl:*)",
+      "Bash(sdkmanager.bat:*)",
+      "Bash(dir:*)",
+      "Bash(dir \"C:\\Users\\Admin\\AppData\\Local\\Android\\Sdk\\platforms\")",
+      "Bash(build_apk_simple.bat)",
+      "Bash(gradlew.bat clean:*)",
+      "Bash(eas whoami:*)",
+      "Bash(npx expo start)",
+      "Bash(npx expo start:*)",
+      "Bash(git remote:*)",
+      "Bash(del:*)"
     ],
     "deny": [],
     "ask": []

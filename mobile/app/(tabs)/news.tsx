@@ -1,10 +1,15 @@
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image } from 'react-native'
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image, ActivityIndicator } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { Colors } from '@/constants/Colors'
+import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase'
 
 export default function NewsScreen() {
-  // Sample news data - will be replaced with API data
-  const news = [
+  const [news, setNews] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  // Sample news data - fallback
+  const mockNews = [
     {
       id: 1,
       title: 'Ramazan Ayı Yardım Kampanyası Başladı',
@@ -28,12 +33,50 @@ export default function NewsScreen() {
     },
   ]
 
+  useEffect(() => {
+    fetchNews()
+  }, [])
+
+  const fetchNews = async () => {
+    try {
+      setLoading(true)
+      const { data, error } = await supabase
+        .from('news')
+        .select('*')
+        .order('date', { ascending: false })
+
+      if (error || !data || data.length === 0) {
+        console.log('Using mock news data (Mobile)')
+        setNews(mockNews)
+      } else {
+        setNews(data)
+      }
+    } catch (e) {
+      console.log('Error fetching news:', e)
+      setNews(mockNews)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('tr-TR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    })
+    try {
+      return new Date(dateString).toLocaleDateString('tr-TR', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      })
+    } catch (e) {
+      return dateString
+    }
+  }
+
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.center]}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    )
   }
 
   return (
@@ -49,7 +92,7 @@ export default function NewsScreen() {
         {news.map((item) => (
           <TouchableOpacity key={item.id} style={styles.newsCard}>
             <Image
-              source={{ uri: item.image }}
+              source={{ uri: item.image || item.image_url || 'https://via.placeholder.com/400' }}
               style={styles.newsImage}
               resizeMode="cover"
             />
@@ -60,7 +103,7 @@ export default function NewsScreen() {
               </View>
               <Text style={styles.newsTitle}>{item.title}</Text>
               <Text style={styles.newsDescription} numberOfLines={2}>
-                {item.description}
+                {item.description || item.content}
               </Text>
               <View style={styles.readMore}>
                 <Text style={styles.readMoreText}>Devamını Oku</Text>
@@ -78,6 +121,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.gray[50],
+  },
+  center: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   header: {
     backgroundColor: Colors.primary,

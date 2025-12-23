@@ -1,10 +1,15 @@
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image } from 'react-native'
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image, ActivityIndicator } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { Colors } from '@/constants/Colors'
+import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase'
 
 export default function VideosScreen() {
-  // Sample video data - will be replaced with API data
-  const videos = [
+  const [videos, setVideos] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  // Sample video data - fallback
+  const mockVideos = [
     {
       id: 1,
       title: 'Ramazan Ayı Yardımları 2024',
@@ -31,6 +36,40 @@ export default function VideosScreen() {
     },
   ]
 
+  useEffect(() => {
+    fetchVideos()
+  }, [])
+
+  const fetchVideos = async () => {
+    try {
+      setLoading(true)
+      const { data, error } = await supabase
+        .from('videos')
+        .select('*')
+        .order('date', { ascending: false })
+
+      if (error || !data || data.length === 0) {
+        console.log('Using mock videos data (Mobile)')
+        setVideos(mockVideos)
+      } else {
+        setVideos(data)
+      }
+    } catch (e) {
+      console.log('Error fetching videos:', e)
+      setVideos(mockVideos)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.center]}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    )
+  }
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
@@ -45,7 +84,7 @@ export default function VideosScreen() {
           <TouchableOpacity key={item.id} style={styles.videoCard}>
             <View style={styles.thumbnailContainer}>
               <Image
-                source={{ uri: item.thumbnail }}
+                source={{ uri: item.thumbnail || item.thumbnail_url || 'https://via.placeholder.com/400' }}
                 style={styles.thumbnail}
                 resizeMode="cover"
               />
@@ -55,7 +94,7 @@ export default function VideosScreen() {
                 </View>
               </View>
               <View style={styles.durationBadge}>
-                <Text style={styles.durationText}>{item.duration}</Text>
+                <Text style={styles.durationText}>{item.duration || '0:00'}</Text>
               </View>
             </View>
             <View style={styles.videoInfo}>
@@ -74,6 +113,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.gray[50],
+  },
+  center: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   header: {
     backgroundColor: Colors.primary,
