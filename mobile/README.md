@@ -1,104 +1,45 @@
-# İyilik Kervanı - Mobil ve Web Uygulama 
+﻿# İyilik Yönetim Sistemi
 
+Muhtaç haneleri takip eden, yardımları kaydeden ve adil dağıtımı destekleyen mobil uygulama.
 
-React Native ve Expo ile geliştirilmiş modern mobil uygulama.
+## Teknolojiler
+- **Frontend:** Vite + Alpine.js + Tailwind (tek sayfa)
+- **Backend:** Firebase (Auth, Firestore, Storage)
+- **Mobile:** Capacitor (Android)
 
-## 🚀 Özellikler
-
-- ✅ **React Native + Expo** - Cross-platform mobil uygulama
-- ✅ **TypeScript** - Tip güvenliği
-- ✅ **Expo Router** - Dosya tabanlı navigasyon
-- ✅ **Native Components** - iOS ve Android desteği
-- ✅ **Tab Navigation** - Kolay gezinme
-- ✅ **Supabase Ready** - Backend entegrasyonu hazır
-
-## 📦 Kurulum
-
+## Kurulum
 ```bash
-# Bağımlılıkları yükle
+cd mobile
 npm install
-
-# Geliştirme sunucusunu başlat
-npm start
-
-# iOS simülatörde çalıştır
-npm run ios
-
-# Android emülatörde çalıştır
-npm run android
-
-# Web'de çalıştır
-npm run web
 ```
 
-## 📱 Ekranlar
-
-### Ana Sayfa (Home)
-- Hero bölümü
-- İstatistikler
-- Projeler grid
-- Hızlı bilgi kartları
-
-### Haberler
-- Haber listesi
-- Resimli kartlar
-- Tarih bilgisi
-- Detay görüntüleme
-
-### Videolar
-- Video listesi
-- Thumbnail önizleme
-- Play button
-- Süre göstergesi
-
-### Hakkımızda
-- Dernek bilgileri
-- Değerler kartları
-- İletişim bilgileri
-- Sosyal medya linkleri
-- Bağış bilgileri
-
-## 📂 Proje Yapısı
-
-```
-mobile/
-├── app/
-│   ├── (tabs)/
-│   │   ├── _layout.tsx     # Tab navigasyon
-│   │   ├── index.tsx       # Ana sayfa
-│   │   ├── news.tsx        # Haberler
-│   │   ├── videos.tsx      # Videolar
-│   │   └── about.tsx       # Hakkımızda
-│   └── _layout.tsx         # Root layout
-├── components/
-├── constants/
-│   └── Colors.ts           # Renk paleti
-├── assets/
-└── package.json
-```
-
-## 🎨 Renk Paleti
-
-- **Primary**: #ba0840 (Kırmızı)
-- **Secondary**: #2c3e50 (Koyu Mavi)
-- **Accent**: #e74c3c (Parlak Kırmızı)
-
-## 🔧 Geliştirme
-
+## Geliştirme (Web)
 ```bash
-# Type check
-npx tsc --noEmit
-
-# Clear cache
-npx expo start -c
+npm run dev
 ```
 
-## 📱 Test
+## Android (Capacitor)
+```bash
+npm run build
+npm run sync
+npm run android
+```
 
-- iOS Simulator
-- Android Emulator
-- Expo Go (Fiziksel cihaz)
+## APK Build
+Detaylı anlatım için: `APK_BUILD_GUIDE.md`
 
-## 📄 Lisans
+## Öne Çıkan Özellikler
+- Admin / Gönüllü rolleri
+- Bölge bazlı yetkilendirme
+- Hane CRUD + telefon mükerrer kontrolü
+- Yardım CRUD + kanıt fotoğrafı
+- Trafik ışığı önceliklendirme (needLevel + son yardım)
+- Force update kontrolü (`system_settings`)
+- Offline-first Firestore cache
 
-© 2024 İyilik Kervanı Derneği
+## Firebase Koleksiyonları
+- `users`
+- `regions`
+- `households`
+- `aid_transactions`
+- `system_settings`

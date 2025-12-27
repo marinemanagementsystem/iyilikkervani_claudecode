@@ -1,0 +1,2982 @@
+<!DOCTYPE html>
+<html lang="tr" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#101c22">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <title>İyilik Kervanı</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+
+  <!-- PWA -->
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+</head>
+<body class="font-display antialiased" x-data x-init="$store.ui.init(); $store.router.init(); $store.system.init(); $store.auth.init();">
+
+  <!-- Loading Overlay -->
+  <div x-show="$store.ui.loading"
+       x-transition:enter="transition ease-out duration-200"
+       x-transition:enter-start="opacity-0"
+       x-transition:enter-end="opacity-100"
+       class="fixed inset-0 z-[100] flex items-center justify-center bg-background-dark/80 backdrop-blur-sm">
+    <div class="flex flex-col items-center gap-4">
+      <div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      <span class="text-white/70 text-sm">Yükleniyor...</span>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div x-show="$store.ui.toast.show"
+       x-transition:enter="transition ease-out duration-300 transform"
+       x-transition:enter-start="translate-y-full opacity-0"
+       x-transition:enter-end="translate-y-0 opacity-100"
+       x-transition:leave="transition ease-in duration-200 transform"
+       x-transition:leave-start="translate-y-0 opacity-100"
+       x-transition:leave-end="translate-y-full opacity-0"
+       class="fixed bottom-24 left-4 right-4 z-[90] flex justify-center pointer-events-none">
+    <div class="px-4 py-3 rounded-xl shadow-lg pointer-events-auto flex items-center gap-3"
+         :class="{
+           'bg-green-500/90': $store.ui.toast.type === 'success',
+           'bg-red-500/90': $store.ui.toast.type === 'error',
+           'bg-primary/90': $store.ui.toast.type === 'info'
+         }">
+      <span class="material-symbols-outlined text-white text-xl"
+            x-text="$store.ui.toast.type === 'success' ? 'check_circle' : ($store.ui.toast.type === 'error' ? 'error' : 'info')"></span>
+      <span class="text-white text-sm font-medium" x-text="$store.ui.toast.message"></span>
+    </div>
+  </div>
+
+  <!-- Offline Banner -->
+  <div x-show="$store.ui.offline"
+       x-transition:enter="transition ease-out duration-300 transform"
+       x-transition:enter-start="-translate-y-full"
+       x-transition:enter-end="translate-y-0"
+       x-transition:leave="transition ease-in duration-200 transform"
+       x-transition:leave-start="translate-y-0"
+       x-transition:leave-end="-translate-y-full"
+       class="fixed top-0 left-0 right-0 z-[100] safe-top">
+    <div class="bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-3 shadow-lg">
+      <div class="flex items-center justify-between max-w-md mx-auto">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+            <span class="material-symbols-outlined text-white">cloud_off</span>
+          </div>
+          <div>
+            <p class="text-white font-semibold text-sm">Çevrimdışı Mod</p>
+            <p class="text-white/80 text-xs">Önbellekteki veriler gösteriliyor</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Syncing Indicator -->
+  <div x-show="$store.ui.syncing && !$store.ui.offline"
+       x-transition:enter="transition ease-out duration-300 transform"
+       x-transition:enter-start="-translate-y-full"
+       x-transition:enter-end="translate-y-0"
+       x-transition:leave="transition ease-in duration-200 transform"
+       x-transition:leave-start="translate-y-0"
+       x-transition:leave-end="-translate-y-full"
+       class="fixed top-0 left-0 right-0 z-[100] safe-top">
+    <div class="bg-gradient-to-r from-primary to-blue-500 px-4 py-3 shadow-lg">
+      <div class="flex items-center justify-center gap-3">
+        <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <p class="text-white font-medium text-sm">Veriler senkronize ediliyor...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Connection Restored Banner (shown briefly) -->
+  <div x-data="{ showRestored: false }"
+       x-init="$watch('$store.ui.offline', (value, oldValue) => { if (oldValue === true && value === false) { showRestored = true; setTimeout(() => showRestored = false, 3000); } })"
+       x-show="showRestored && !$store.ui.syncing"
+       x-transition:enter="transition ease-out duration-300 transform"
+       x-transition:enter-start="-translate-y-full"
+       x-transition:enter-end="translate-y-0"
+       x-transition:leave="transition ease-in duration-200 transform"
+       x-transition:leave-start="translate-y-0"
+       x-transition:leave-end="-translate-y-full"
+       class="fixed top-0 left-0 right-0 z-[100] safe-top">
+    <div class="bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-3 shadow-lg">
+      <div class="flex items-center justify-center gap-3">
+        <span class="material-symbols-outlined text-white">wifi</span>
+        <p class="text-white font-medium text-sm">Bağlantı yeniden kuruldu!</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Force Update Modal -->
+  <div x-show="$store.system.requiresUpdate"
+       class="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 backdrop-blur-sm p-6">
+    <div class="w-full max-w-sm rounded-2xl bg-white dark:bg-surface-dark p-6 text-center shadow-xl border border-slate-200 dark:border-slate-700">
+      <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-500">
+        <span class="material-symbols-outlined text-2xl">system_update</span>
+      </div>
+      <h2 class="text-xl font-bold text-slate-900 dark:text-white">Güncelleme Gerekli</h2>
+      <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">
+        Bu sürüm desteklenmiyor. Lütfen uygulamayı güncelleyin.
+      </p>
+      <p class="mt-3 text-xs text-slate-400">
+        Mevcut: <span x-text="$store.system.appVersion"></span> · Minimum: <span x-text="$store.system.minRequiredVersion"></span>
+      </p>
+      <button @click="$store.system.openUpdate()"
+              class="mt-5 w-full rounded-xl bg-primary py-3 text-white font-bold shadow-lg shadow-primary/30 hover:bg-primary-dark">
+        Güncellemeyi Aç
+      </button>
+    </div>
+  </div>
+
+  <!-- Region Selection Modal -->
+  <div x-show="$store.auth.needsRegionSelection"
+       class="fixed inset-0 z-[110] flex items-center justify-center bg-black/70 backdrop-blur-sm p-6">
+    <div class="w-full max-w-md rounded-2xl bg-white dark:bg-surface-dark p-6 shadow-xl border border-slate-200 dark:border-slate-700">
+      <h2 class="text-xl font-bold text-slate-900 dark:text-white">Bölge Seçimi</h2>
+      <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">
+        Devam etmek için sorumlu olduğunuz bölgeyi seçin.
+      </p>
+      <div class="mt-4 max-h-64 overflow-y-auto space-y-2">
+        <template x-for="region in $store.data.regions" :key="region.id">
+          <button @click="$store.auth.assignRegion(region.id)"
+                  class="w-full rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-3 text-left hover:border-primary hover:bg-primary/5 transition">
+            <p class="text-sm font-semibold text-slate-900 dark:text-white" x-text="region.name"></p>
+            <p class="text-xs text-slate-500 dark:text-slate-400" x-text="(region.city || '') + (region.district ? ' / ' + region.district : '')"></p>
+          </button>
+        </template>
+        <div x-show="$store.data.regions.length === 0" class="text-center text-sm text-slate-500 dark:text-slate-400 py-6">
+          Henüz bölge tanımlanmamış.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- LOGIN PAGE -->
+  <!-- ============================================ -->
+  <div x-show="$store.router.isActive('login')"
+       x-transition:enter="animate-fade-in"
+       class="relative flex min-h-screen w-full flex-col bg-background-light dark:bg-background-dark overflow-x-hidden">
+
+    <!-- Hero Image / Visual Header -->
+    <div class="w-full h-64 relative overflow-hidden">
+      <div class="absolute inset-0 bg-primary/10 dark:bg-primary/5"></div>
+      <!-- Abstract gradient background instead of image -->
+      <div class="w-full h-full bg-gradient-to-br from-primary/30 via-blue-500/20 to-purple-500/10"></div>
+      <div class="absolute inset-0 bg-gradient-to-b from-transparent to-background-light dark:to-background-dark"></div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col items-center px-6 -mt-20 z-10 w-full max-w-md mx-auto">
+      <!-- Logo & Brand -->
+      <div class="bg-background-light dark:bg-background-dark p-4 rounded-full shadow-lg mb-4">
+        <div class="bg-primary/20 p-4 rounded-full text-primary">
+          <span class="material-symbols-outlined text-5xl">volunteer_activism</span>
+        </div>
+      </div>
+
+      <h1 class="text-gray-900 dark:text-white tracking-tight text-3xl font-bold leading-tight text-center mb-2">İyilik Kervanı</h1>
+      <p class="text-gray-500 dark:text-gray-400 text-base font-normal leading-normal text-center mb-8 max-w-xs">
+        Hoş geldiniz. Yardım dağıtımını yönetmek için giriş yapın.
+      </p>
+
+      <!-- Login Form -->
+      <form class="w-full flex flex-col gap-5" x-data="{ username: '', password: '', showPassword: false }" @submit.prevent="$store.auth.login(username, password)">
+        <!-- Username Field -->
+        <div class="flex flex-col gap-2">
+          <label class="text-gray-900 dark:text-white text-sm font-medium leading-normal ml-1">Kullanıcı Adı</label>
+          <div class="relative">
+            <input type="text"
+                   x-model="username"
+                   class="flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-gray-900 dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-gray-200 dark:border-[#3b4b54] bg-white dark:bg-[#1c2327] focus:border-primary h-14 placeholder:text-gray-400 dark:placeholder:text-[#9db0b9] px-4 text-base font-normal leading-normal transition-colors"
+                   placeholder="kullanici.adi"
+                   required
+                   autocomplete="username">
+          </div>
+        </div>
+
+        <!-- Password Field -->
+        <div class="flex flex-col gap-2">
+          <div class="flex justify-between items-center ml-1">
+            <label class="text-gray-900 dark:text-white text-sm font-medium leading-normal">Şifre</label>
+            <a class="text-primary text-sm font-medium hover:text-primary/80 transition-colors" href="#">Şifremi Unuttum?</a>
+          </div>
+          <div class="relative flex w-full items-stretch rounded-xl overflow-hidden shadow-sm dark:shadow-none bg-white dark:bg-[#1c2327] border border-gray-200 dark:border-[#3b4b54] focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/50 transition-all">
+            <input :type="showPassword ? 'text' : 'password'"
+                   x-model="password"
+                   class="flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-l-xl text-gray-900 dark:text-white focus:outline-0 focus:ring-0 border-0 bg-transparent h-14 placeholder:text-gray-400 dark:placeholder:text-[#9db0b9] px-4 text-base font-normal leading-normal"
+                   placeholder="Şifrenizi girin"
+                   required
+                   autocomplete="current-password">
+            <button type="button"
+                    @click="showPassword = !showPassword"
+                    class="px-4 flex items-center justify-center text-gray-400 hover:text-primary transition-colors focus:outline-none">
+              <span class="material-symbols-outlined text-xl" x-text="showPassword ? 'visibility_off' : 'visibility'"></span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="pt-4 flex flex-col gap-4">
+          <button type="submit" class="w-full bg-primary hover:bg-primary-dark text-white font-bold h-14 rounded-xl shadow-lg shadow-primary/20 transition-all transform active:scale-[0.98] flex items-center justify-center gap-2">
+            <span>Giriş Yap</span>
+            <span class="material-symbols-outlined text-xl">login</span>
+          </button>
+        </div>
+      </form>
+
+      <!-- Footer -->
+      <div class="mt-8 mb-8 text-center">
+        <p class="text-gray-500 dark:text-gray-400 text-sm">
+          Hesabınız yok mu?
+          <a class="text-primary font-medium hover:underline ml-1" href="#">Yöneticiyle İletişime Geçin</a>
+        </p>
+      </div>
+
+      <!-- Version Info -->
+      <div class="mt-auto pb-6 text-center opacity-30">
+        <p class="text-xs text-gray-500 dark:text-gray-400" x-text="'v' + $store.system.appVersion"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- FORGOT PASSWORD PAGE -->
+  <!-- ============================================ -->
+  <div x-show="$store.router.isActive('forgot-password')"
+       x-transition:enter="animate-fade-in"
+       class="relative flex min-h-screen w-full flex-col bg-background-light dark:bg-background-dark overflow-x-hidden"
+       x-data="{
+         email: '',
+         sent: false,
+         loading: false,
+         async sendResetLink() {
+           if (!this.email) {
+             Alpine.store('ui').showToast('E-posta adresi girin', 'error');
+             return;
+           }
+           this.loading = true;
+           // Simulate API call
+           await new Promise(resolve => setTimeout(resolve, 1500));
+           this.loading = false;
+           this.sent = true;
+           Alpine.store('ui').showToast('Şifre sıfırlama bağlantısı gönderildi', 'success');
+         }
+       }">
+
+    <!-- Header -->
+    <header class="flex items-center px-4 py-4 safe-top">
+      <button @click="$store.router.back()" class="flex items-center justify-center rounded-full w-10 h-10 hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+        <span class="material-symbols-outlined text-slate-900 dark:text-white">arrow_back</span>
+      </button>
+    </header>
+
+    <!-- Content -->
+    <div class="flex-1 flex flex-col items-center px-6 w-full max-w-md mx-auto">
+
+      <!-- Icon -->
+      <div class="bg-primary/10 p-6 rounded-full mb-6">
+        <span class="material-symbols-outlined text-5xl text-primary">lock_reset</span>
+      </div>
+
+      <!-- Title & Description -->
+      <h1 class="text-gray-900 dark:text-white text-2xl font-bold text-center mb-3">Şifremi Unuttum</h1>
+      <p class="text-gray-500 dark:text-gray-400 text-center mb-8 max-w-xs" x-show="!sent">
+        Kayıtlı e-posta adresinizi girin. Şifre sıfırlama bağlantısı göndereceğiz.
+      </p>
+
+      <!-- Success State -->
+      <template x-if="sent">
+        <div class="w-full text-center">
+          <div class="bg-green-500/10 p-4 rounded-2xl mb-6">
+            <span class="material-symbols-outlined text-4xl text-green-500 mb-2">mark_email_read</span>
+            <p class="text-green-400 font-medium">E-posta Gönderildi!</p>
+          </div>
+          <p class="text-gray-400 text-sm mb-6">
+            <span x-text="email"></span> adresine şifre sıfırlama bağlantısı gönderdik. Gelen kutunuzu kontrol edin.
+          </p>
+          <p class="text-gray-500 text-xs mb-8">
+            E-posta gelmedi mi? Spam klasörünü kontrol edin veya tekrar deneyin.
+          </p>
+          <button @click="sent = false; email = ''"
+                  class="text-primary font-medium hover:text-primary/80 transition-colors">
+            Tekrar Gönder
+          </button>
+        </div>
+      </template>
+
+      <!-- Form State -->
+      <form x-show="!sent" class="w-full flex flex-col gap-5" @submit.prevent="sendResetLink()">
+        <!-- Email Field -->
+        <div class="flex flex-col gap-2">
+          <label class="text-gray-900 dark:text-white text-sm font-medium ml-1">E-posta Adresi</label>
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">mail</span>
+            <input type="email"
+                   x-model="email"
+                   class="w-full pl-12 pr-4 py-4 rounded-xl text-gray-900 dark:text-white bg-white dark:bg-surface-dark border border-gray-200 dark:border-gray-700 focus:border-primary focus:ring-2 focus:ring-primary/50 focus:outline-none transition-colors"
+                   placeholder="ornek@email.com"
+                   required
+                   autocomplete="email">
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit"
+                :disabled="loading"
+                class="w-full py-4 bg-primary hover:bg-primary-dark text-white font-semibold rounded-xl transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+          <template x-if="loading">
+            <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </template>
+          <span x-text="loading ? 'Gönderiliyor...' : 'Sıfırlama Bağlantısı Gönder'"></span>
+        </button>
+      </form>
+
+      <!-- Back to Login -->
+      <div class="mt-8 text-center">
+        <p class="text-gray-500 dark:text-gray-400 text-sm">
+          Şifrenizi hatırladınız mı?
+          <a @click.prevent="$store.router.navigate('login')" class="text-primary font-medium hover:text-primary/80 transition-colors cursor-pointer ml-1">
+            Giriş Yap
+          </a>
+        </p>
+      </div>
+    </div>
+
+    <!-- Decorative Elements -->
+    <div class="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-primary/5 to-transparent pointer-events-none"></div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- ADMIN DASHBOARD -->
+  <!-- ============================================ -->
+  <div x-show="$store.router.isActive('admin-dashboard')"
+       x-transition:enter="animate-fade-in"
+       class="relative flex min-h-screen w-full flex-col bg-background-light dark:bg-background-dark overflow-x-hidden pb-24"
+       x-init="$store.data.loadHouseholds(); $store.admin.refreshAidSummary()">
+
+    <!-- Top App Bar -->
+    <header class="sticky top-0 z-20 flex items-center justify-between bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md p-4 pb-2 safe-top">
+      <div class="flex items-center gap-3">
+        <div class="relative">
+          <div class="bg-primary rounded-full w-10 h-10 flex items-center justify-center border-2 border-primary">
+            <span class="material-symbols-outlined text-white">person</span>
+          </div>
+          <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background-dark"></div>
+        </div>
+        <div>
+          <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Hoş geldin,</p>
+          <h2 class="text-lg font-bold leading-tight tracking-tight text-gray-900 dark:text-white" x-text="$store.auth.userData?.name || 'Admin'"></h2>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button @click="$store.ui.toggleDarkMode()" class="flex items-center justify-center w-10 h-10 rounded-full bg-surface-dark text-white hover:bg-surface-highlight transition-colors">
+          <span class="material-symbols-outlined" x-text="$store.ui.darkMode ? 'light_mode' : 'dark_mode'"></span>
+        </button>
+        <button class="flex items-center justify-center w-10 h-10 rounded-full bg-surface-dark text-white hover:bg-surface-highlight transition-colors relative">
+          <span class="material-symbols-outlined">notifications</span>
+          <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Timeframe Selector (Chips) -->
+    <div class="flex gap-3 px-4 py-2 overflow-x-auto scrollbar-hide" x-data="{ period: 'month' }">
+      <button @click="period = 'month'" :class="period === 'month' ? 'bg-primary text-white' : 'bg-white dark:bg-surface-dark text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-transparent'" class="flex h-9 shrink-0 items-center justify-center rounded-full px-5 transition-transform active:scale-95">
+        <p class="text-sm font-medium">Bu Ay</p>
+      </button>
+      <button @click="period = 'quarter'" :class="period === 'quarter' ? 'bg-primary text-white' : 'bg-white dark:bg-surface-dark text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-transparent'" class="flex h-9 shrink-0 items-center justify-center rounded-full px-5 transition-transform active:scale-95">
+        <p class="text-sm font-medium">Son Çeyrek</p>
+      </button>
+      <button @click="period = 'all'" :class="period === 'all' ? 'bg-primary text-white' : 'bg-white dark:bg-surface-dark text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-transparent'" class="flex h-9 shrink-0 items-center justify-center rounded-full px-5 transition-transform active:scale-95">
+        <p class="text-sm font-medium">Tüm Zamanlar</p>
+      </button>
+    </div>
+
+    <!-- Overview Headline -->
+    <div class="px-4 pt-6 pb-2 flex justify-between items-end">
+      <h2 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Genel Bakış</h2>
+      <span class="text-xs text-slate-500 dark:text-slate-400 mb-1">Şimdi güncellendi</span>
+    </div>
+
+    <!-- Hero Stats Cards - Horizontal Scroll -->
+    <div class="flex gap-4 p-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory">
+      <!-- Card 1 - Total Households -->
+      <div class="snap-center shrink-0 flex min-w-[240px] flex-col gap-3 rounded-xl p-5 bg-white dark:bg-surface-dark shadow-sm border border-slate-100 dark:border-transparent">
+        <div class="flex items-center justify-between">
+          <div class="p-2 bg-primary/20 rounded-lg text-primary">
+            <span class="material-symbols-outlined">home</span>
+          </div>
+        </div>
+        <div>
+          <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Toplam Hane</p>
+          <p class="text-3xl font-bold tracking-tight mt-1 text-slate-900 dark:text-white" x-text="$store.data.stats.total">0</p>
+        </div>
+      </div>
+
+      <!-- Card 2 - Red (Critical) -->
+      <div class="snap-center shrink-0 flex min-w-[240px] flex-col gap-3 rounded-xl p-5 bg-white dark:bg-surface-dark shadow-sm border border-slate-100 dark:border-transparent">
+        <div class="flex items-center justify-between">
+          <div class="p-2 bg-red-500/20 rounded-lg text-red-500">
+            <span class="material-symbols-outlined">warning</span>
+          </div>
+          <span class="flex items-center text-red-500 text-sm font-bold bg-red-500/10 px-2 py-0.5 rounded">
+            90+ gün
+          </span>
+        </div>
+        <div>
+          <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Acil Yardım</p>
+          <p class="text-3xl font-bold tracking-tight mt-1 text-slate-900 dark:text-white" x-text="$store.data.stats.red">0</p>
+        </div>
+      </div>
+
+      <!-- Card 3 - Yellow (Attention) -->
+      <div class="snap-center shrink-0 flex min-w-[240px] flex-col gap-3 rounded-xl p-5 bg-white dark:bg-surface-dark shadow-sm border border-slate-100 dark:border-transparent">
+        <div class="flex items-center justify-between">
+          <div class="p-2 bg-yellow-500/20 rounded-lg text-yellow-500">
+            <span class="material-symbols-outlined">schedule</span>
+          </div>
+          <span class="flex items-center text-yellow-500 text-sm font-bold bg-yellow-500/10 px-2 py-0.5 rounded">
+            30-90 gün
+          </span>
+        </div>
+        <div>
+          <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Dikkat Edilmeli</p>
+          <p class="text-3xl font-bold tracking-tight mt-1 text-slate-900 dark:text-white" x-text="$store.data.stats.yellow">0</p>
+        </div>
+      </div>
+
+      <!-- Card 4 - Green (OK) -->
+      <div class="snap-center shrink-0 flex min-w-[240px] flex-col gap-3 rounded-xl p-5 bg-white dark:bg-surface-dark shadow-sm border border-slate-100 dark:border-transparent">
+        <div class="flex items-center justify-between">
+          <div class="p-2 bg-green-500/20 rounded-lg text-green-500">
+            <span class="material-symbols-outlined">check_circle</span>
+          </div>
+          <span class="flex items-center text-green-500 text-sm font-bold bg-green-500/10 px-2 py-0.5 rounded">
+            &lt;30 gün
+          </span>
+        </div>
+        <div>
+          <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Güncel</p>
+          <p class="text-3xl font-bold tracking-tight mt-1 text-slate-900 dark:text-white" x-text="$store.data.stats.green">0</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Traffic Light Status Chart -->
+    <div class="px-4 py-4">
+      <div class="rounded-2xl bg-white dark:bg-surface-dark p-5 shadow-sm border border-slate-100 dark:border-transparent">
+        <div class="flex justify-between items-start mb-6">
+          <div>
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white">Durum Dağılımı</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Traffic Light sistemine göre</p>
+          </div>
+          <button class="p-1.5 text-slate-400 hover:text-white rounded-full hover:bg-white/10">
+            <span class="material-symbols-outlined">more_horiz</span>
+          </button>
+        </div>
+        <div class="flex items-end justify-between h-40 gap-4 px-4 relative">
+          <!-- Target Line -->
+          <div class="absolute w-full top-[30%] border-t border-dashed border-slate-300 dark:border-slate-600 z-0"></div>
+          <!-- Bar - Green -->
+          <div class="relative z-10 flex flex-col items-center flex-1 h-full justify-end group">
+            <div class="w-full max-w-[50px] bg-green-500 rounded-t-md transition-all duration-500"
+                 :style="'height: ' + ($store.data.stats.total > 0 ? ($store.data.stats.green / $store.data.stats.total * 100) : 0) + '%'"></div>
+            <p class="text-xs font-medium text-slate-500 dark:text-slate-400 mt-2">Güncel</p>
+          </div>
+          <!-- Bar - Yellow -->
+          <div class="relative z-10 flex flex-col items-center flex-1 h-full justify-end group">
+            <div class="w-full max-w-[50px] bg-yellow-500 rounded-t-md transition-all duration-500"
+                 :style="'height: ' + ($store.data.stats.total > 0 ? ($store.data.stats.yellow / $store.data.stats.total * 100) : 0) + '%'"></div>
+            <p class="text-xs font-medium text-slate-500 dark:text-slate-400 mt-2">Dikkat</p>
+          </div>
+          <!-- Bar - Red -->
+          <div class="relative z-10 flex flex-col items-center flex-1 h-full justify-end group">
+            <div class="w-full max-w-[50px] bg-red-500 rounded-t-md transition-all duration-500"
+                 :style="'height: ' + ($store.data.stats.total > 0 ? ($store.data.stats.red / $store.data.stats.total * 100) : 0) + '%'"></div>
+            <p class="text-xs font-medium text-slate-500 dark:text-slate-400 mt-2">Acil</p>
+          </div>
+        </div>
+        <div class="mt-4 flex gap-4 justify-center">
+          <div class="flex items-center gap-2">
+            <div class="w-3 h-3 rounded-full bg-green-500"></div>
+            <p class="text-xs text-slate-500 dark:text-slate-400">0-30 gün</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+            <p class="text-xs text-slate-500 dark:text-slate-400">30-90 gün</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="w-3 h-3 rounded-full bg-red-500"></div>
+            <p class="text-xs text-slate-500 dark:text-slate-400">90+ gün</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Activity Header -->
+    <div class="px-4 pt-2 pb-2">
+      <h2 class="text-xl font-bold tracking-tight text-gray-900 dark:text-white">Son Aktiviteler</h2>
+    </div>
+
+    <!-- Activity Feed -->
+    <div class="px-4 pb-20">
+      <div class="relative pl-4 border-l-2 border-slate-200 dark:border-slate-700 space-y-6">
+        <template x-for="(household, index) in $store.data.households.slice(0, 5)" :key="household.id">
+          <div class="relative" @click="$store.data.selectHousehold(household.id); $store.router.navigate('household-detail')">
+            <div class="absolute -left-[21px] top-1 w-3 h-3 rounded-full border-2 border-background-light dark:border-background-dark"
+                 :class="{
+                   'bg-red-500': $store.data.getStatus(household.daysSinceAid, household.needLevel) === 'red',
+                   'bg-yellow-500': $store.data.getStatus(household.daysSinceAid, household.needLevel) === 'yellow',
+                   'bg-green-500': $store.data.getStatus(household.daysSinceAid, household.needLevel) === 'green'
+                 }"></div>
+            <div class="flex flex-col cursor-pointer hover:bg-white/5 rounded-lg p-2 -ml-2 transition-colors">
+              <span class="text-xs text-slate-500 dark:text-slate-400 mb-0.5" x-text="household.daysSinceAid + ' gün önce'"></span>
+              <p class="text-sm text-slate-900 dark:text-white font-medium" x-text="$store.data.getHouseholdDisplayName(household)"></p>
+              <p class="text-xs text-slate-500 dark:text-slate-400" x-text="household.address || household.neighborhood || ''"></p>
+            </div>
+          </div>
+        </template>
+      </div>
+    </div>
+
+    <!-- Floating Action Button -->
+    <div class="fixed bottom-20 right-4 z-40">
+      <button @click="$store.data.openQuickAid()" class="flex items-center gap-2 h-14 pl-4 pr-5 rounded-full bg-primary text-white shadow-lg shadow-primary/30 hover:bg-primary/90 transition-transform hover:scale-105 active:scale-95">
+        <span class="material-symbols-outlined text-[24px]">volunteer_activism</span>
+        <span class="font-bold text-sm">Yardım Ekle</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- VOLUNTEER DASHBOARD -->
+  <!-- ============================================ -->
+  <div x-show="$store.router.isActive('volunteer-dashboard')"
+       x-transition:enter="animate-fade-in"
+       class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white antialiased min-h-screen relative pb-24"
+       x-init="$store.data.loadHouseholds()">
+
+    <!-- Header Section -->
+    <header class="sticky top-0 z-30 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors duration-300 safe-top">
+      <div class="px-4 py-4 pt-6 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="relative">
+            <div class="h-12 w-12 rounded-full bg-primary flex items-center justify-center border-2 border-primary">
+              <span class="material-symbols-outlined text-white text-2xl">person</span>
+            </div>
+            <div class="absolute bottom-0 right-0 h-3 w-3 bg-green-500 rounded-full border-2 border-white dark:border-background-dark"></div>
+          </div>
+          <div class="flex flex-col">
+            <h1 class="text-lg font-bold leading-tight text-slate-900 dark:text-white" x-text="'Merhaba, ' + ($store.auth.userData?.name || 'Gönüllü')"></h1>
+            <div class="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
+              <span class="material-symbols-outlined text-[14px]">location_on</span>
+              <span x-text="$store.auth.userData?.district || 'Gebze'"></span>
+            </div>
+          </div>
+        </div>
+        <!-- Quick Action: Scan QR -->
+        <button aria-label="Scan QR Code" class="group flex items-center justify-center h-10 w-10 rounded-full bg-primary/10 hover:bg-primary/20 text-primary transition-colors">
+          <span class="material-symbols-outlined group-hover:scale-110 transition-transform">qr_code_scanner</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content Scroll Area -->
+    <main class="flex flex-col gap-6 pt-4">
+      <!-- Stats Section -->
+      <section class="px-4">
+        <div class="grid grid-cols-3 gap-3">
+          <div class="flex flex-col gap-1 rounded-2xl p-4 bg-surface-light dark:bg-surface-dark shadow-sm border border-slate-100 dark:border-slate-800">
+            <div class="flex items-center gap-2 mb-1">
+              <div class="p-1.5 rounded-full bg-blue-500/10 text-primary">
+                <span class="material-symbols-outlined text-[20px]">home</span>
+              </div>
+            </div>
+            <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Toplam</p>
+            <p class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight" x-text="$store.data.stats.total">0</p>
+          </div>
+          <div class="flex flex-col gap-1 rounded-2xl p-4 bg-surface-light dark:bg-surface-dark shadow-sm border border-slate-100 dark:border-slate-800">
+            <div class="flex items-center gap-2 mb-1">
+              <div class="p-1.5 rounded-full bg-red-500/10 text-red-500">
+                <span class="material-symbols-outlined text-[20px]">warning</span>
+              </div>
+            </div>
+            <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Acil</p>
+            <p class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight" x-text="$store.data.stats.red">0</p>
+          </div>
+          <div class="flex flex-col gap-1 rounded-2xl p-4 bg-surface-light dark:bg-surface-dark shadow-sm border border-slate-100 dark:border-slate-800">
+            <div class="flex items-center gap-2 mb-1">
+              <div class="p-1.5 rounded-full bg-green-500/10 text-green-500">
+                <span class="material-symbols-outlined text-[20px]">check_circle</span>
+              </div>
+            </div>
+            <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Güncel</p>
+            <p class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight" x-text="$store.data.stats.green">0</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Urgent Aid Needed Carousel -->
+      <section class="flex flex-col gap-3">
+        <div class="px-4 flex items-center justify-between">
+          <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <span class="material-symbols-outlined text-red-500">warning</span>
+            Acil Yardım Gerekli
+          </h2>
+          <a @click="$store.router.navigate('map')" class="text-xs font-medium text-primary hover:text-primary/80 cursor-pointer">Haritada Gör</a>
+        </div>
+        <div class="flex overflow-x-auto scrollbar-hide gap-4 px-4 pb-2 snap-x">
+          <template x-for="household in $store.data.households.filter(h => $store.data.getStatus(h.daysSinceAid, h.needLevel) === 'red').slice(0, 5)" :key="household.id">
+            <div class="snap-center shrink-0 w-[85vw] max-w-[320px] flex flex-col rounded-2xl bg-surface-light dark:bg-surface-dark shadow-md border-l-4 border-red-500 overflow-hidden"
+                 @click="$store.data.selectHousehold(household.id); $store.router.navigate('household-detail')">
+              <div class="relative h-24 w-full bg-gradient-to-br from-red-500/20 to-orange-500/10 flex items-center justify-center">
+                <span class="material-symbols-outlined text-red-400 text-5xl opacity-30">home</span>
+                <div class="absolute top-3 right-3">
+                  <span class="px-2 py-1 rounded-lg bg-red-500 text-white text-[10px] font-bold uppercase tracking-wider shadow-sm">Kritik</span>
+                </div>
+                <div class="absolute bottom-3 left-3">
+                  <p class="text-white text-xs font-medium bg-black/40 px-2 py-0.5 rounded backdrop-blur-sm" x-text="household.daysSinceAid + ' gün önce'"></p>
+                </div>
+              </div>
+              <div class="p-4 flex flex-col gap-3">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h3 class="text-base font-bold text-slate-900 dark:text-white" x-text="$store.data.getHouseholdDisplayName(household)"></h3>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1" x-text="household.address || household.neighborhood || ''"></p>
+                  </div>
+                </div>
+                <div class="flex gap-2 mt-1">
+                  <button class="flex-1 h-10 bg-primary hover:bg-primary/90 text-white text-sm font-semibold rounded-lg flex items-center justify-center gap-2 transition-colors">
+                    <span class="material-symbols-outlined text-[18px]">navigation</span>
+                    Yol Tarifi
+                  </button>
+                  <button class="h-10 w-10 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">call</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </template>
+          <!-- Empty state if no urgent households -->
+          <template x-if="$store.data.households.filter(h => $store.data.getStatus(h.daysSinceAid, h.needLevel) === 'red').length === 0">
+            <div class="snap-center shrink-0 w-[85vw] max-w-[320px] flex flex-col items-center justify-center rounded-2xl bg-surface-light dark:bg-surface-dark shadow-md p-8">
+              <span class="material-symbols-outlined text-green-500 text-5xl mb-4">check_circle</span>
+              <p class="text-slate-900 dark:text-white font-medium">Harika!</p>
+              <p class="text-slate-500 dark:text-slate-400 text-sm text-center">Acil yardım bekleyen hane yok.</p>
+            </div>
+          </template>
+          <div class="w-1 shrink-0"></div>
+        </div>
+      </section>
+
+      <!-- Recent Activity Feed -->
+      <section class="px-4 pb-4">
+        <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-3">Son Aktiviteler</h2>
+        <div class="flex flex-col gap-3">
+          <template x-for="(household, index) in $store.data.households.slice(0, 4)" :key="household.id">
+            <div class="flex items-start gap-4 p-3 rounded-xl bg-surface-light dark:bg-surface-dark border border-slate-100 dark:border-slate-800 shadow-sm cursor-pointer"
+                 @click="$store.data.selectHousehold(household.id); $store.router.navigate('household-detail')">
+              <div class="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
+                   :class="{
+                     'bg-red-500/10 text-red-500': $store.data.getStatus(household.daysSinceAid, household.needLevel) === 'red',
+                     'bg-yellow-500/10 text-yellow-500': $store.data.getStatus(household.daysSinceAid, household.needLevel) === 'yellow',
+                     'bg-green-500/10 text-green-500': $store.data.getStatus(household.daysSinceAid, household.needLevel) === 'green'
+                   }">
+                <span class="material-symbols-outlined text-[18px]"
+                      x-text="$store.data.getStatus(household.daysSinceAid, household.needLevel) === 'green' ? 'check_circle' : ($store.data.getStatus(household.daysSinceAid, household.needLevel) === 'yellow' ? 'schedule' : 'warning')"></span>
+              </div>
+              <div class="flex-1">
+                <p class="text-sm font-medium text-slate-900 dark:text-white" x-text="$store.data.getHouseholdDisplayName(household)"></p>
+                <p class="text-xs text-slate-500 dark:text-slate-400" x-text="household.address || household.neighborhood || ''"></p>
+              </div>
+              <p class="text-xs font-medium text-slate-400 whitespace-nowrap" x-text="household.daysSinceAid + ' gün'"></p>
+            </div>
+          </template>
+        </div>
+        <button @click="$store.router.navigate('household-list')" class="mt-4 w-full py-3 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-primary transition-colors">
+          Tüm Geçmişi Gör
+        </button>
+      </section>
+    </main>
+
+    <!-- Floating Action Button -->
+    <div class="fixed bottom-20 right-4 z-40">
+      <button @click="$store.data.openQuickAid()" class="flex items-center gap-2 h-14 pl-4 pr-5 rounded-full bg-primary text-white shadow-lg shadow-primary/30 hover:bg-primary/90 transition-transform hover:scale-105 active:scale-95">
+        <span class="material-symbols-outlined text-[24px]">add_task</span>
+        <span class="font-bold text-sm">Yardım Ekle</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- REGIONS LIST (with Aid Summary) -->
+  <!-- ============================================ -->
+  <div x-show="$store.router.isActive('regions-list')"
+       x-transition:enter="animate-fade-in"
+       class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white h-screen flex flex-col overflow-hidden antialiased"
+       x-data="{ search: '', expandedRegion: null }"
+       x-init="$store.admin.subscribeUsers(); $store.admin.refreshAidSummary()">
+
+    <!-- Top App Bar -->
+    <header class="flex-none px-4 pt-12 pb-3 bg-background-light dark:bg-background-dark z-10 sticky top-0 safe-top">
+      <div class="flex items-center justify-between mb-4">
+        <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Bölgeler & Yardım</h1>
+        <button @click="$store.admin.refreshAidSummary()" class="text-primary text-sm font-semibold hover:underline">
+          Yenile
+        </button>
+      </div>
+    </header>
+
+    <main class="flex-1 overflow-y-auto px-4 pb-24 scrollbar-hide">
+      <!-- Aid Summary Stats -->
+      <div class="rounded-xl bg-white dark:bg-card-dark p-4 shadow-sm border border-slate-100 dark:border-slate-800/60 mb-4">
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Son 30 Gün Yardım Özeti</p>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="rounded-lg bg-slate-50 dark:bg-slate-800/40 p-3">
+            <p class="text-xs text-slate-500 dark:text-slate-400">Toplam Yardım</p>
+            <p class="text-xl font-bold text-slate-900 dark:text-white" x-text="$store.admin.aidSummary.totalCount"></p>
+          </div>
+          <div class="rounded-lg bg-slate-50 dark:bg-slate-800/40 p-3">
+            <p class="text-xs text-slate-500 dark:text-slate-400">Toplam Nakit</p>
+            <p class="text-xl font-bold text-slate-900 dark:text-white" x-text="($store.admin.aidSummary.totalCashAmount || 0).toLocaleString('tr-TR') + ' ₺'"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search Input -->
+      <div class="relative group mb-4">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+          <span class="material-symbols-outlined text-[20px]">search</span>
+        </div>
+        <input x-model="search"
+               class="block w-full rounded-xl border-none bg-white dark:bg-card-dark py-3 pl-10 pr-4 text-[14px] text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-primary/50 shadow-sm transition-all"
+               placeholder="Bölge veya hane ara..."
+               type="text"/>
+      </div>
+
+      <!-- Regions List with Expandable Households -->
+      <div class="space-y-2">
+        <template x-for="region in $store.data.regions.filter(r => {
+          if (!search) return true;
+          const searchLower = search.toLowerCase();
+          const regionMatches = r.name.toLowerCase().includes(searchLower);
+          const householdMatches = $store.data.getHouseholdsByRegion(r.id).some(h =>
+            h.familyName?.toLowerCase().includes(searchLower) || h.address?.toLowerCase().includes(searchLower)
+          );
+          return regionMatches || householdMatches;
+        })" :key="region.id">
+          <div class="rounded-xl bg-white dark:bg-card-dark shadow-sm border border-slate-100 dark:border-slate-800/60 overflow-hidden">
+            <!-- Region Header -->
+            <div class="flex items-center justify-between p-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                 @click="expandedRegion = expandedRegion === region.id ? null : region.id">
+              <!-- Left Color Strip -->
+              <div class="flex items-center gap-3 flex-1">
+                <div class="w-1 h-10 rounded-full"
+                     :class="{
+                       'bg-status-red': $store.data.getRegionStats(region.id).red > 0,
+                       'bg-status-yellow': $store.data.getRegionStats(region.id).red === 0 && $store.data.getRegionStats(region.id).yellow > 0,
+                       'bg-status-green': $store.data.getRegionStats(region.id).red === 0 && $store.data.getRegionStats(region.id).yellow === 0 && $store.data.getRegionStats(region.id).total > 0,
+                       'bg-slate-300 dark:bg-slate-600': $store.data.getRegionStats(region.id).total === 0
+                     }"></div>
+                <div class="flex-1">
+                  <h3 class="text-[15px] font-bold text-slate-900 dark:text-white" x-text="region.name"></h3>
+                  <div class="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+                    <span x-text="$store.data.getRegionHouseholdCount(region.id) + ' hane'"></span>
+                    <span class="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary px-2 py-0.5 text-[11px] font-semibold">
+                      <span class="material-symbols-outlined text-[14px]">volunteer_activism</span>
+                      <span x-text="($store.admin.aidSummary.byRegionMonth.find(r => r.regionId === region.id)?.count || 0) + ' yardım'"></span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <!-- Traffic Light Mini Stats -->
+              <div class="flex items-center gap-1.5 mr-2">
+                <template x-if="$store.data.getRegionStats(region.id).red > 0">
+                  <span class="flex items-center gap-0.5 text-[11px] text-status-red font-medium">
+                    <span class="w-2 h-2 rounded-full bg-status-red"></span>
+                    <span x-text="$store.data.getRegionStats(region.id).red"></span>
+                  </span>
+                </template>
+                <template x-if="$store.data.getRegionStats(region.id).yellow > 0">
+                  <span class="flex items-center gap-0.5 text-[11px] text-status-yellow font-medium">
+                    <span class="w-2 h-2 rounded-full bg-status-yellow"></span>
+                    <span x-text="$store.data.getRegionStats(region.id).yellow"></span>
+                  </span>
+                </template>
+                <template x-if="$store.data.getRegionStats(region.id).green > 0">
+                  <span class="flex items-center gap-0.5 text-[11px] text-status-green font-medium">
+                    <span class="w-2 h-2 rounded-full bg-status-green"></span>
+                    <span x-text="$store.data.getRegionStats(region.id).green"></span>
+                  </span>
+                </template>
+              </div>
+              <span class="material-symbols-outlined text-slate-400 transition-transform duration-200"
+                    :class="{ 'rotate-180': expandedRegion === region.id }">expand_more</span>
+            </div>
+
+            <!-- Expanded Households List -->
+            <div x-show="expandedRegion === region.id"
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 -translate-y-2"
+                 x-transition:enter-end="opacity-100 translate-y-0"
+                 class="border-t border-slate-100 dark:border-slate-800/60 bg-slate-50 dark:bg-slate-900/30">
+              <template x-for="household in $store.data.getHouseholdsByRegion(region.id).filter(h => {
+                if (!search) return true;
+                const searchLower = search.toLowerCase();
+                return h.familyName?.toLowerCase().includes(searchLower) || h.address?.toLowerCase().includes(searchLower);
+              })" :key="household.id">
+                <div class="flex items-center gap-3 px-4 py-2.5 border-b border-slate-100 dark:border-slate-800/40 last:border-b-0 cursor-pointer hover:bg-white dark:hover:bg-slate-800/50 transition-colors"
+                     @click.stop="$store.data.selectHousehold(household.id); $store.router.navigate('household-detail')">
+                  <!-- Status Dot -->
+                  <div class="w-3 h-3 rounded-full flex-shrink-0"
+                       :class="{
+                         'bg-status-red': $store.data.getStatus(household.daysSinceAid, household.needLevel) === 'red',
+                         'bg-status-yellow': $store.data.getStatus(household.daysSinceAid, household.needLevel) === 'yellow',
+                         'bg-status-green': $store.data.getStatus(household.daysSinceAid, household.needLevel) === 'green'
+                       }"></div>
+                  <!-- Household Info -->
+                  <div class="flex-1 min-w-0">
+                    <p class="text-[13px] font-semibold text-slate-900 dark:text-white truncate" x-text="household.familyName"></p>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate" x-text="household.address || '-'"></p>
+                  </div>
+                  <!-- Days Since Aid -->
+                  <div class="text-right flex-shrink-0 flex flex-col items-end gap-1">
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold"
+                          :class="{
+                            'bg-status-red/15 text-status-red': $store.data.getStatus(household.daysSinceAid, household.needLevel) === 'red',
+                            'bg-status-yellow/15 text-status-yellow': $store.data.getStatus(household.daysSinceAid, household.needLevel) === 'yellow',
+                            'bg-status-green/15 text-status-green': $store.data.getStatus(household.daysSinceAid, household.needLevel) === 'green'
+                          }"
+                          x-text="$store.data.getStatusLabel(household.daysSinceAid, household.needLevel)"></span>
+                    <p class="text-[12px] font-bold"
+                       :class="{
+                         'text-status-red': $store.data.getStatus(household.daysSinceAid, household.needLevel) === 'red',
+                         'text-status-yellow': $store.data.getStatus(household.daysSinceAid, household.needLevel) === 'yellow',
+                         'text-status-green': $store.data.getStatus(household.daysSinceAid, household.needLevel) === 'green'
+                       }"
+                       x-text="household.daysSinceAid !== null ? household.daysSinceAid + ' gün' : 'Hiç'"></p>
+                    <p class="text-[10px] text-slate-400">son yardım</p>
+                  </div>
+                  <span class="material-symbols-outlined text-slate-300 dark:text-slate-600 text-[18px]">chevron_right</span>
+                </div>
+              </template>
+              <!-- Empty State -->
+              <template x-if="$store.data.getHouseholdsByRegion(region.id).length === 0">
+                <div class="px-4 py-4 text-center text-sm text-slate-400">
+                  Bu bölgede kayıtlı hane yok
+                </div>
+              </template>
+            </div>
+          </div>
+        </template>
+
+        <!-- Empty State for Regions -->
+        <template x-if="$store.data.regions.filter(r => {
+          if (!search) return true;
+          const searchLower = search.toLowerCase();
+          return r.name.toLowerCase().includes(searchLower) ||
+            $store.data.getHouseholdsByRegion(r.id).some(h => h.familyName?.toLowerCase().includes(searchLower));
+        }).length === 0">
+          <div class="flex flex-col items-center justify-center py-12 text-center">
+            <span class="material-symbols-outlined text-5xl text-slate-300 dark:text-slate-600 mb-4">search_off</span>
+            <p class="text-slate-500 dark:text-slate-400">Sonuç bulunamadı</p>
+          </div>
+        </template>
+      </div>
+    </main>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- HOUSEHOLD LIST -->
+  <!-- ============================================ -->
+  <div x-show="$store.router.isActive('household-list')"
+       x-transition:enter="animate-fade-in"
+       class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white h-screen flex flex-col overflow-hidden antialiased"
+       x-data="{ filter: 'all', search: '' }"
+       x-init="$nextTick(() => { if (!$store.data.selectedRegionId) { filter = 'all'; search = ''; } })">
+
+    <!-- Top App Bar & Search -->
+    <header class="flex-none px-4 pt-12 pb-4 bg-background-light dark:bg-background-dark z-10 sticky top-0 safe-top">
+      <!-- Title Row -->
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-3">
+          <button @click="$store.data.clearRegionFilter(); $store.router.back()" class="flex items-center justify-center w-10 h-10 rounded-xl bg-white dark:bg-card-dark text-slate-600 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700 transition-all">
+            <span class="material-symbols-outlined">arrow_back</span>
+          </button>
+          <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Haneler</h1>
+        </div>
+        <button @click="$store.data.openHouseholdForm()" class="flex items-center justify-center w-10 h-10 rounded-xl bg-primary text-white hover:bg-opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/20">
+          <span class="material-symbols-outlined text-2xl font-bold">add</span>
+        </button>
+      </div>
+      <!-- Region Filter Badge -->
+      <template x-if="$store.data.selectedRegionId">
+        <div class="flex items-center gap-2 mb-3 p-2 bg-primary/10 rounded-lg">
+          <span class="material-symbols-outlined text-primary text-[18px]">location_city</span>
+          <span class="text-sm font-medium text-primary" x-text="$store.data.getRegionName($store.data.selectedRegionId)"></span>
+          <button @click="$store.data.clearRegionFilter()" class="ml-auto p-1 hover:bg-primary/20 rounded-full">
+            <span class="material-symbols-outlined text-primary text-[18px]">close</span>
+          </button>
+        </div>
+      </template>
+      <!-- Search Input -->
+      <div class="relative group">
+        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+          <span class="material-symbols-outlined text-[22px]">search</span>
+        </div>
+        <input x-model="search"
+               class="block w-full rounded-xl border-none bg-white dark:bg-card-dark py-3.5 pl-11 pr-4 text-[15px] text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-primary/50 shadow-sm transition-all"
+               placeholder="İsim veya Telefon Ara"
+               type="text"/>
+      </div>
+    </header>
+
+    <!-- Filter Pills -->
+    <div class="flex-none px-4 py-1 pb-4 overflow-x-auto scrollbar-hide flex gap-2.5 items-center">
+      <!-- All Filter -->
+      <button @click="filter = 'all'"
+              :class="filter === 'all' ? 'bg-primary text-white shadow-md shadow-primary/20' : 'bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700/50 text-slate-600 dark:text-slate-300'"
+              class="flex-none px-4 py-2 rounded-lg text-[13px] font-semibold tracking-wide transition-all">
+        Tümü
+      </button>
+      <!-- Red Filter -->
+      <button @click="filter = 'red'"
+              :class="filter === 'red' ? 'bg-status-red text-white' : 'bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700/50 text-slate-600 dark:text-slate-300 hover:border-status-red hover:text-status-red'"
+              class="group flex-none px-4 py-2 rounded-lg text-[13px] font-medium transition-all whitespace-nowrap flex items-center gap-1.5 active:bg-status-red/5">
+        <span class="w-2 h-2 rounded-full bg-status-red shadow-[0_0_6px_rgba(239,68,68,0.6)]"></span>
+        Acil
+      </button>
+      <!-- Yellow Filter -->
+      <button @click="filter = 'yellow'"
+              :class="filter === 'yellow' ? 'bg-status-yellow text-white' : 'bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700/50 text-slate-600 dark:text-slate-300 hover:border-status-yellow hover:text-status-yellow'"
+              class="group flex-none px-4 py-2 rounded-lg text-[13px] font-medium transition-all whitespace-nowrap flex items-center gap-1.5 active:bg-status-yellow/5">
+        <span class="w-2 h-2 rounded-full bg-status-yellow shadow-[0_0_6px_rgba(234,179,8,0.6)]"></span>
+        Dikkat
+      </button>
+      <!-- Green Filter -->
+      <button @click="filter = 'green'"
+              :class="filter === 'green' ? 'bg-status-green text-white' : 'bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700/50 text-slate-600 dark:text-slate-300 hover:border-status-green hover:text-status-green'"
+              class="group flex-none px-4 py-2 rounded-lg text-[13px] font-medium transition-all whitespace-nowrap flex items-center gap-1.5 active:bg-status-green/5">
+        <span class="w-2 h-2 rounded-full bg-status-green shadow-[0_0_6px_rgba(34,197,94,0.6)]"></span>
+        Güncel
+      </button>
+    </div>
+
+    <!-- Scrollable Content List -->
+    <main class="flex-1 overflow-y-auto px-4 space-y-3 pb-24 scrollbar-hide">
+      <template x-for="household in $store.data.households.filter(h => {
+        const status = $store.data.getStatus(h.daysSinceAid, h.needLevel);
+        const matchesFilter = filter === 'all' || filter === status;
+        const matchesSearch = $store.data.matchesSearch(h, search);
+        const matchesRegion = !$store.data.selectedRegionId || h.regionId === $store.data.selectedRegionId;
+        return matchesFilter && matchesSearch && matchesRegion;
+      })" :key="household.id">
+        <div class="group relative overflow-hidden rounded-xl bg-white dark:bg-card-dark shadow-sm border border-slate-100 dark:border-slate-800/60 active:scale-[0.99] transition-transform duration-100 touch-manipulation cursor-pointer"
+             @click="$store.data.selectHousehold(household.id); $store.router.navigate('household-detail')">
+          <!-- Left Color Strip -->
+          <div class="absolute left-0 top-0 bottom-0 w-[5px]"
+               :class="{
+                 'bg-status-red': $store.data.getStatus(household.daysSinceAid, household.needLevel) === 'red',
+                 'bg-status-yellow': $store.data.getStatus(household.daysSinceAid, household.needLevel) === 'yellow',
+                 'bg-status-green': $store.data.getStatus(household.daysSinceAid, household.needLevel) === 'green'
+               }"></div>
+          <div class="p-4 pl-5 flex items-center justify-between">
+            <div class="flex-1 min-w-0 pr-4">
+              <div class="flex items-center gap-2 mb-1.5">
+                <h3 class="text-[16px] font-bold text-slate-900 dark:text-white truncate leading-tight" x-text="$store.data.getHouseholdDisplayName(household)"></h3>
+                <!-- Status Badge -->
+                <span class="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider border"
+                      :class="{
+                        'bg-status-red/10 text-status-red border-status-red/20': $store.data.getStatus(household.daysSinceAid, household.needLevel) === 'red',
+                        'bg-status-yellow/10 text-status-yellow border-status-yellow/20': $store.data.getStatus(household.daysSinceAid, household.needLevel) === 'yellow',
+                        'bg-status-green/10 text-status-green border-status-green/20': $store.data.getStatus(household.daysSinceAid, household.needLevel) === 'green'
+                      }"
+                      x-text="$store.data.getStatusLabel(household.daysSinceAid, household.needLevel)"></span>
+              </div>
+              <div class="flex flex-col gap-1">
+                <div class="flex items-center text-[13px] text-slate-500 dark:text-slate-400">
+                  <span class="material-symbols-outlined text-[16px] mr-1.5 opacity-70">phone</span>
+                  <span class="font-medium" x-text="$store.data.getHouseholdPhone(household) || 'Telefon yok'"></span>
+                </div>
+                <div class="flex items-center text-[13px] text-slate-500 dark:text-slate-400">
+                  <span class="material-symbols-outlined text-[16px] mr-1.5 opacity-70">priority_high</span>
+                  <span x-text="'Muhtaçlık: ' + (household.needLevel || '-')"></span>
+                </div>
+                <div class="flex items-center text-[13px] text-slate-500 dark:text-slate-400">
+                  <span class="material-symbols-outlined text-[16px] mr-1.5 opacity-70">groups</span>
+                  <span x-text="$store.data.getMembersCounts(household).adults + ' yetişkin, ' + $store.data.getMembersCounts(household).children + ' çocuk'"></span>
+                </div>
+              </div>
+              <p class="text-[12px] font-semibold mt-2 flex items-center gap-1"
+                 :class="{
+                   'text-status-red': $store.data.getStatus(household.daysSinceAid, household.needLevel) === 'red',
+                   'text-slate-500 dark:text-slate-400': $store.data.getStatus(household.daysSinceAid, household.needLevel) !== 'red'
+                 }">
+                <span class="material-symbols-outlined text-[14px]">history</span>
+                <span x-text="'Son Yardım: ' + (household.daysSinceAid > 365 ? 'Hiç' : household.daysSinceAid + ' gün önce')"></span>
+              </p>
+            </div>
+            <div class="flex-shrink-0 text-slate-300 dark:text-slate-600">
+              <span class="material-symbols-outlined">chevron_right</span>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- Empty State -->
+      <template x-if="$store.data.households.filter(h => {
+        const status = $store.data.getStatus(h.daysSinceAid, h.needLevel);
+        const matchesFilter = filter === 'all' || filter === status;
+        const matchesSearch = $store.data.matchesSearch(h, search);
+        const matchesRegion = !$store.data.selectedRegionId || h.regionId === $store.data.selectedRegionId;
+        return matchesFilter && matchesSearch && matchesRegion;
+      }).length === 0">
+        <div class="flex flex-col items-center justify-center py-12 text-center">
+          <span class="material-symbols-outlined text-5xl text-slate-300 dark:text-slate-600 mb-4">search_off</span>
+          <p class="text-slate-500 dark:text-slate-400">Sonuç bulunamadı</p>
+        </div>
+      </template>
+    </main>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- HOUSEHOLD DETAIL -->
+  <!-- ============================================ -->
+  <div x-show="$store.router.isActive('household-detail')"
+       x-transition:enter="animate-fade-in"
+       class="relative flex h-full min-h-screen w-full flex-col overflow-x-hidden pb-24 bg-background-light dark:bg-background-dark">
+
+    <template x-if="$store.data.selectedHousehold">
+      <div>
+        <!-- TopAppBar -->
+        <div class="sticky top-0 z-10 flex items-center bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-sm p-4 border-b border-slate-200 dark:border-slate-800 justify-between safe-top">
+          <button @click="$store.router.back()" class="flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
+            <span class="material-symbols-outlined text-slate-900 dark:text-white">arrow_back</span>
+          </button>
+          <h2 class="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center truncate px-2" x-text="$store.data.selectedHousehold.familyName || 'Hane Detayı'"></h2>
+          <button @click="$store.data.openHouseholdForm($store.data.selectedHousehold)" class="flex w-10 items-center justify-center rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
+            <p class="text-primary text-base font-bold leading-normal tracking-[0.015em] shrink-0">Düzenle</p>
+          </button>
+        </div>
+
+        <!-- ProfileHeader -->
+        <div class="flex p-4 flex-col gap-4">
+          <div class="flex w-full flex-col gap-4 p-4 rounded-xl bg-surface-light dark:bg-surface-dark shadow-sm">
+            <div class="flex gap-4 items-start">
+              <!-- Avatar -->
+              <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-24 w-24 border-2 border-slate-200 dark:border-slate-700 shrink-0 bg-slate-300 dark:bg-slate-700 flex items-center justify-center">
+                <span class="material-symbols-outlined text-slate-500 dark:text-slate-400 text-4xl">person</span>
+              </div>
+              <div class="flex flex-col justify-center flex-1 min-w-0">
+                <div class="flex items-center justify-between gap-2">
+                  <h1 class="text-slate-900 dark:text-white text-xl font-bold leading-tight tracking-[-0.015em] truncate" x-text="$store.data.getHouseholdDisplayName($store.data.selectedHousehold)"></h1>
+                  <!-- Status Badge -->
+                  <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium shrink-0"
+                        :class="{
+                          'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300': $store.data.getStatus($store.data.selectedHousehold.daysSinceAid, $store.data.selectedHousehold.needLevel) === 'red',
+                          'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300': $store.data.getStatus($store.data.selectedHousehold.daysSinceAid, $store.data.selectedHousehold.needLevel) === 'yellow',
+                          'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300': $store.data.getStatus($store.data.selectedHousehold.daysSinceAid, $store.data.selectedHousehold.needLevel) === 'green'
+                        }"
+                        x-text="$store.data.getStatusLabel($store.data.selectedHousehold.daysSinceAid, $store.data.selectedHousehold.needLevel)">
+                  </span>
+                </div>
+                <p class="text-slate-500 dark:text-slate-400 text-sm font-normal leading-normal mt-1">
+                  ID: <span x-text="$store.data.selectedHousehold.id || '---'"></span> •
+                  <span x-text="$store.data.selectedHousehold.daysSinceAid + ' gün önce'"></span>
+                </p>
+                <div class="flex items-center gap-1 mt-2 text-slate-500 dark:text-slate-400">
+                  <span class="material-symbols-outlined text-[18px]">location_on</span>
+                  <p class="text-sm font-normal leading-normal truncate" x-text="$store.data.selectedHousehold.address || $store.data.selectedHousehold.neighborhood"></p>
+                </div>
+                <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                  <span class="rounded-full bg-slate-100 dark:bg-slate-800 px-2 py-1">
+                    Bölge: <span class="text-slate-700 dark:text-slate-200" x-text="$store.data.selectedHousehold.regionName || '—'"></span>
+                  </span>
+                  <span class="rounded-full bg-slate-100 dark:bg-slate-800 px-2 py-1">
+                    Muhtaçlık: <span class="text-slate-700 dark:text-slate-200" x-text="$store.data.selectedHousehold.needLevel || '-'"></span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ButtonGroup (Quick Actions) -->
+        <div class="px-4 pb-2 space-y-3">
+          <button @click="$store.data.openAidForm()"
+                  class="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold text-base shadow-lg shadow-primary/20 flex items-center justify-center gap-2 transition-transform active:scale-[0.98]">
+            <span class="material-symbols-outlined">volunteer_activism</span>
+            Yardım Ekle
+          </button>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Bu haneye yeni yardım kaydı eklemek için kullanın.</p>
+          <div class="flex gap-2">
+            <button @click="$store.data.openWhatsAppRequest($store.data.getHouseholdPhone($store.data.selectedHousehold))"
+                    class="flex flex-1 items-center justify-center gap-1.5 h-11 px-3 rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors text-primary shadow-sm">
+              <span class="material-symbols-outlined text-[18px]">share_location</span>
+              <span class="text-xs font-bold truncate">Konum İste</span>
+            </button>
+            <a :href="'tel:' + $store.data.getHouseholdPhone($store.data.selectedHousehold)" class="flex flex-1 items-center justify-center gap-1.5 h-11 px-3 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors text-slate-900 dark:text-white shadow-sm">
+              <span class="material-symbols-outlined text-[18px]">call</span>
+              <span class="text-xs font-bold truncate">Ara</span>
+            </a>
+            <button x-show="$store.data.selectedHousehold.latitude && $store.data.selectedHousehold.longitude"
+                    @click="$store.data.showHouseholdOnMap($store.data.selectedHousehold)"
+                    class="flex flex-1 items-center justify-center gap-1.5 h-11 px-3 rounded-lg bg-emerald-500 hover:bg-emerald-600 transition-colors text-white shadow-sm">
+              <span class="material-symbols-outlined text-[18px]">map</span>
+              <span class="text-xs font-bold truncate">Haritada Gör</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="h-4"></div>
+
+        <!-- Family Members Section -->
+        <div>
+          <div class="flex items-center justify-between px-4 pb-2 pt-2">
+            <h3 class="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">
+              Aile Üyeleri (<span x-text="$store.data.getMembersCounts($store.data.selectedHousehold).total"></span>)
+            </h3>
+          </div>
+          <div class="flex flex-col">
+            <template x-for="(member, index) in ($store.data.selectedHousehold.members || [])" :key="'member-' + index">
+              <div class="flex items-center gap-4 px-4 py-3 hover:bg-slate-50 dark:hover:bg-surface-dark transition-colors border-b border-slate-100 dark:border-slate-800 last:border-b-0">
+                <div class="bg-slate-200 dark:bg-slate-700 rounded-full h-12 w-12 shrink-0 flex items-center justify-center">
+                  <span class="material-symbols-outlined text-slate-400" x-text="member.type === 'child' ? 'child_care' : 'person'"></span>
+                </div>
+                <div class="flex flex-col flex-1">
+                  <p class="text-slate-900 dark:text-white text-base font-medium leading-normal line-clamp-1"
+                     x-text="member.name || (member.type === 'child' ? 'Çocuk' : 'Yetişkin')"></p>
+                  <p class="text-slate-500 dark:text-slate-400 text-sm font-normal leading-normal"
+                     x-text="(member.age ? member.age + ' yaş' : '') + (member.gender ? ' • ' + member.gender : '')"></p>
+                </div>
+                <span class="text-xs font-semibold text-primary" x-text="member.type === 'child' ? 'Çocuk' : (member.type === 'elder' ? 'Yaşlı' : 'Yetişkin')"></span>
+              </div>
+            </template>
+            <template x-if="!$store.data.selectedHousehold.members || $store.data.selectedHousehold.members.length === 0">
+              <div class="flex flex-col items-center justify-center py-6 text-slate-500 dark:text-slate-400">
+                <span class="material-symbols-outlined text-4xl mb-2">group_off</span>
+                <p class="text-sm">Üye bilgisi bulunamadı</p>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <div class="h-2 bg-slate-100 dark:bg-[#0c161b]"></div>
+
+        <!-- Aid History Section -->
+        <div>
+          <div class="flex items-center justify-between px-4 pb-2 pt-4">
+            <h3 class="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">Yardım Geçmişi</h3>
+            <span class="material-symbols-outlined text-slate-400 text-xl cursor-pointer">filter_list</span>
+          </div>
+          <div class="flex flex-col px-4 pt-2 gap-3 pb-4">
+            <!-- Aid History Items -->
+            <template x-for="aid in ($store.data.selectedHousehold.aidHistory || [])" :key="aid.id">
+              <div class="flex flex-col gap-2 p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-surface-light dark:bg-surface-dark">
+                <div class="flex justify-between items-center">
+                  <div class="flex items-center gap-3">
+                    <div class="flex items-center justify-center size-10 rounded-full"
+                         :class="{
+                           'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400': aid.type === 'food',
+                           'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400': aid.type === 'medical',
+                           'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400': aid.type === 'clothing',
+                           'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400': aid.type === 'cash',
+                           'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400': aid.type !== 'food' && aid.type !== 'medical' && aid.type !== 'clothing' && aid.type !== 'cash'
+                         }">
+                      <span class="material-symbols-outlined text-[20px]"
+                            x-text="aid.type === 'food' ? 'inventory_2' : (aid.type === 'medical' ? 'medical_services' : (aid.type === 'clothing' ? 'checkroom' : (aid.type === 'cash' ? 'payments' : 'volunteer_activism')))"></span>
+                    </div>
+                    <div>
+                      <p class="text-slate-900 dark:text-white text-sm font-bold" x-text="aid.typeLabel || aid.type"></p>
+                      <p class="text-slate-500 dark:text-slate-400 text-xs" x-text="aid.volunteerName || 'Gönüllü'"></p>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <p class="text-slate-900 dark:text-white text-sm font-bold" x-text="new Date(aid.date?.toDate?.() || aid.date).toLocaleDateString('tr-TR', {day: 'numeric', month: 'short'})"></p>
+                    <p class="text-slate-500 dark:text-slate-400 text-xs" x-text="new Date(aid.date?.toDate?.() || aid.date).getFullYear()"></p>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                  <span x-text="aid.amount ? ('Miktar: ' + aid.amount) : 'Miktar belirtilmedi'"></span>
+                  <div class="flex items-center gap-2">
+                    <button @click.stop="$store.data.openAidForm(aid)" class="text-primary hover:underline">Düzenle</button>
+                    <button @click.stop="$store.data.deleteAid(aid.id)" class="text-red-500 hover:underline">Sil</button>
+                  </div>
+                </div>
+                <template x-if="aid.notes">
+                  <p class="text-xs text-slate-500 dark:text-slate-400" x-text="aid.notes"></p>
+                </template>
+                <template x-if="aid.evidencePhotoUrl">
+                  <a :href="aid.evidencePhotoUrl" target="_blank" class="text-xs text-primary hover:underline">Kanıt Fotoğrafını Gör</a>
+                </template>
+              </div>
+            </template>
+
+            <!-- Empty State -->
+            <template x-if="!$store.data.selectedHousehold.aidHistory || $store.data.selectedHousehold.aidHistory.length === 0">
+              <div class="flex flex-col items-center justify-center py-8 text-slate-500 dark:text-slate-400">
+                <span class="material-symbols-outlined text-4xl mb-2">history</span>
+                <p class="text-sm">Henüz yardım kaydı yok</p>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <!-- Notes Section (if exists) -->
+        <template x-if="$store.data.selectedHousehold.notes">
+          <div>
+            <div class="h-2 bg-slate-100 dark:bg-[#0c161b]"></div>
+            <div class="px-4 py-4">
+              <h3 class="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-[-0.015em] mb-2">Notlar</h3>
+              <p class="text-slate-600 dark:text-slate-400 text-sm" x-text="$store.data.selectedHousehold.notes"></p>
+            </div>
+          </div>
+        </template>
+
+        <!-- Sticky Bottom Action Button -->
+        <div class="fixed bottom-0 left-0 w-full p-4 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 safe-bottom">
+          <button @click="$store.data.openAidForm()"
+                  class="flex w-full items-center justify-center gap-2 h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold text-base shadow-lg transition-transform active:scale-[0.98]">
+            <span class="material-symbols-outlined">add_circle</span>
+            Yardım Ekle
+          </button>
+        </div>
+      </div>
+    </template>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- HOUSEHOLD FORM -->
+  <!-- ============================================ -->
+  <div x-show="$store.router.isActive('household-form')"
+       x-transition:enter="animate-fade-in"
+       class="relative flex min-h-screen w-full flex-col bg-background-light dark:bg-background-dark pb-24">
+
+    <!-- Header -->
+    <header class="sticky top-0 z-20 flex items-center justify-between bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md p-4 safe-top border-b border-slate-200 dark:border-slate-800">
+      <div class="flex items-center gap-3">
+        <button @click="$store.router.back()" class="flex items-center justify-center rounded-full w-10 h-10 hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+          <span class="material-symbols-outlined text-slate-900 dark:text-white">arrow_back</span>
+        </button>
+        <h2 class="text-xl font-bold leading-tight tracking-tight text-slate-900 dark:text-white"
+            x-text="$store.data.householdForm.mode === 'edit' ? 'Hane Düzenle' : 'Hane Ekle'"></h2>
+      </div>
+    </header>
+
+    <!-- Form -->
+    <div class="flex-1 overflow-y-auto px-4 py-6 space-y-5">
+      <div class="space-y-2">
+        <label class="text-sm font-medium text-slate-700 dark:text-slate-200">Hane Adı</label>
+        <input x-model="$store.data.householdForm.familyName"
+               class="w-full h-12 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark px-4 text-sm text-slate-900 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary"
+               placeholder="Örn. Yılmaz Ailesi">
+      </div>
+
+      <div class="space-y-2">
+        <label class="text-sm font-medium text-slate-700 dark:text-slate-200">Bölge</label>
+        <select x-model="$store.data.householdForm.regionId"
+                :disabled="!$store.auth.isAdmin"
+                class="w-full h-12 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark px-4 text-sm text-slate-900 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary disabled:opacity-60">
+          <option value="">Bölge seçin</option>
+          <template x-for="region in $store.data.regions" :key="region.id">
+            <option :value="region.id" x-text="region.name"></option>
+          </template>
+        </select>
+      </div>
+
+      <div class="space-y-2">
+        <label class="text-sm font-medium text-slate-700 dark:text-slate-200">Telefon</label>
+        <input x-model="$store.data.householdForm.primaryPhone"
+               @input="$store.data.householdForm.duplicatePhone = false"
+               class="w-full h-12 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark px-4 text-sm text-slate-900 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary"
+               placeholder="05xx xxx xx xx">
+        <p x-show="$store.data.householdForm.duplicatePhone" class="text-xs text-red-500">Bu telefon numarası zaten kayıtlı.</p>
+      </div>
+
+      <div class="space-y-2">
+        <label class="text-sm font-medium text-slate-700 dark:text-slate-200">Adres</label>
+        <textarea x-model="$store.data.householdForm.address"
+                  class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark px-4 py-3 text-sm text-slate-900 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary resize-none"
+                  rows="3"
+                  placeholder="Açık adres"></textarea>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div class="space-y-2">
+          <label class="text-sm font-medium text-slate-700 dark:text-slate-200">Muhtaçlık Seviyesi</label>
+          <select x-model="$store.data.householdForm.needLevel"
+                  class="w-full h-12 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark px-4 text-sm text-slate-900 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary">
+            <option value="1">1 - Düşük</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5 - Acil</option>
+          </select>
+        </div>
+        <div class="space-y-2">
+          <label class="text-sm font-medium text-slate-700 dark:text-slate-200">Durum</label>
+          <select x-model="$store.data.householdForm.status"
+                  class="w-full h-12 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark px-4 text-sm text-slate-900 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary">
+            <option value="active">Aktif</option>
+            <option value="passive">Pasif</option>
+            <option value="banned">Engelli</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="space-y-3">
+        <div class="flex items-center justify-between">
+          <label class="text-sm font-medium text-slate-700 dark:text-slate-200">Aile Üyeleri</label>
+          <button @click="$store.data.addMember()" class="text-sm text-primary font-semibold hover:underline">Üye Ekle</button>
+        </div>
+        <template x-for="(member, index) in $store.data.householdForm.members" :key="'member-form-' + index">
+          <div class="rounded-xl border border-slate-200 dark:border-slate-700 p-3 space-y-2">
+            <div class="flex items-center gap-2">
+              <input x-model="member.name"
+                     class="flex-1 h-10 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark px-3 text-sm text-slate-900 dark:text-white"
+                     placeholder="Ad Soyad">
+              <button @click="$store.data.removeMember(index)" class="text-red-500 text-xs font-semibold">Sil</button>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <input x-model="member.age"
+                     class="h-10 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark px-3 text-sm text-slate-900 dark:text-white"
+                     placeholder="Yaş">
+              <select x-model="member.gender"
+                      class="h-10 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark px-3 text-sm text-slate-900 dark:text-white">
+                <option value="">Cinsiyet</option>
+                <option value="kadın">Kadın</option>
+                <option value="erkek">Erkek</option>
+                <option value="diğer">Diğer</option>
+              </select>
+              <select x-model="member.type"
+                      class="h-10 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark px-3 text-sm text-slate-900 dark:text-white">
+                <option value="child">Çocuk</option>
+                <option value="parent">Ebeveyn</option>
+                <option value="elder">Yaşlı</option>
+              </select>
+            </div>
+          </div>
+        </template>
+        <div x-show="$store.data.householdForm.members.length === 0" class="text-sm text-slate-500 dark:text-slate-400">
+          Henüz üye eklenmedi.
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <label class="text-sm font-medium text-slate-700 dark:text-slate-200">Notlar</label>
+        <textarea x-model="$store.data.householdForm.notes"
+                  class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark px-4 py-3 text-sm text-slate-900 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary resize-none"
+                  rows="3"
+                  placeholder="Ek notlar"></textarea>
+      </div>
+
+      <!-- Location Picker Section -->
+      <div class="space-y-3" x-data="locationPickerComponent()">
+        <div class="flex items-center justify-between">
+          <label class="text-sm font-medium text-slate-700 dark:text-slate-200">Konum</label>
+          <div class="flex items-center gap-2">
+            <template x-if="$store.data.householdForm.latitude && $store.data.householdForm.longitude">
+              <span class="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
+                <span class="material-symbols-outlined text-[14px]">check_circle</span>
+                Konum seçildi
+              </span>
+            </template>
+          </div>
+        </div>
+
+        <!-- Address Search -->
+        <div class="relative">
+          <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
+          <input type="text"
+                 x-model="addressSearch"
+                 @keydown.enter.prevent="searchAddress()"
+                 class="w-full h-12 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark pl-10 pr-12 text-sm text-slate-900 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary"
+                 placeholder="Adres ara (Örn: Cumhuriyet Mah. Gebze)">
+          <button @click="searchAddress()"
+                  :disabled="searching"
+                  class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center hover:bg-primary/20 disabled:opacity-50">
+            <span class="material-symbols-outlined text-primary text-lg" x-show="!searching">arrow_forward</span>
+            <span class="material-symbols-outlined text-primary text-lg animate-spin" x-show="searching">progress_activity</span>
+          </button>
+        </div>
+
+        <!-- Search Results -->
+        <template x-if="searchResults.length > 0">
+          <div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark overflow-hidden max-h-40 overflow-y-auto">
+            <template x-for="result in searchResults" :key="result.place_id">
+              <button @click="selectSearchResult(result)"
+                      class="w-full px-4 py-3 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 border-b border-slate-100 dark:border-slate-700 last:border-b-0">
+                <span x-text="result.display_name"></span>
+              </button>
+            </template>
+          </div>
+        </template>
+
+        <!-- Map Container -->
+        <div class="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700">
+          <div id="location-picker-map" class="w-full h-52"></div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex gap-2">
+          <button @click="getCurrentLocation()"
+                  :disabled="gettingLocation"
+                  class="flex-1 h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark text-sm font-medium text-slate-700 dark:text-slate-200 flex items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50">
+            <span class="material-symbols-outlined text-lg" x-show="!gettingLocation">my_location</span>
+            <span class="material-symbols-outlined text-lg animate-spin" x-show="gettingLocation">progress_activity</span>
+            <span x-text="gettingLocation ? 'Alınıyor...' : 'Mevcut Konum'"></span>
+          </button>
+          <button @click="clearLocation()"
+                  x-show="$store.data.householdForm.latitude && $store.data.householdForm.longitude"
+                  class="h-10 px-4 rounded-xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-900/20 text-sm font-medium text-red-600 dark:text-red-400 flex items-center justify-center gap-2 hover:bg-red-100 dark:hover:bg-red-900/30">
+            <span class="material-symbols-outlined text-lg">close</span>
+            Temizle
+          </button>
+        </div>
+
+        <!-- Coordinates Display -->
+        <template x-if="$store.data.householdForm.latitude && $store.data.householdForm.longitude">
+          <div class="flex gap-3 text-xs text-slate-500 dark:text-slate-400">
+            <span>Enlem: <span class="font-mono text-slate-700 dark:text-slate-300" x-text="parseFloat($store.data.householdForm.latitude).toFixed(6)"></span></span>
+            <span>Boylam: <span class="font-mono text-slate-700 dark:text-slate-300" x-text="parseFloat($store.data.householdForm.longitude).toFixed(6)"></span></span>
+          </div>
+        </template>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="fixed bottom-0 left-0 w-full bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 p-4 safe-bottom">
+      <div class="flex gap-3">
+        <button @click="$store.data.submitHouseholdForm()"
+                :disabled="$store.data.householdForm.submitting"
+                class="flex-1 h-12 rounded-xl bg-primary text-white font-bold shadow-lg shadow-primary/20 hover:bg-primary-dark disabled:opacity-60">
+          Kaydet
+        </button>
+        <button x-show="$store.data.householdForm.mode === 'edit'"
+                @click="$store.data.deleteHousehold($store.data.householdForm.id)"
+                class="h-12 px-4 rounded-xl bg-red-50 text-red-500 font-semibold hover:bg-red-100">
+          Sil
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- ADD AID MODAL -->
+  <!-- ============================================ -->
+  <div x-show="$store.router.isActive('add-aid-modal')"
+       x-transition:enter="transition ease-out duration-300"
+       x-transition:enter-start="opacity-0"
+       x-transition:enter-end="opacity-100"
+       class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
+       x-data="{ }">
+
+    <!-- Modal Sheet -->
+    <div class="absolute bottom-0 left-0 w-full h-[90%] flex flex-col bg-background-light dark:bg-background-dark rounded-t-[32px] overflow-hidden shadow-[0_-8px_30px_rgba(0,0,0,0.5)] animate-slide-up">
+
+      <!-- Bottom Sheet Handle -->
+      <div class="flex flex-col items-center pt-3 pb-1 bg-background-light dark:bg-background-dark shrink-0">
+        <div class="h-1.5 w-12 rounded-full bg-gray-300 dark:bg-gray-600"></div>
+      </div>
+
+      <!-- Top App Bar / Header -->
+      <div class="flex items-center px-6 py-4 justify-between bg-background-light dark:bg-background-dark border-b border-gray-200 dark:border-gray-800 shrink-0">
+        <h2 class="text-gray-900 dark:text-white text-xl font-bold leading-tight tracking-tight" x-text="$store.data.aidForm.mode === 'edit' ? 'Yardımı Güncelle' : 'Yardım Kaydet'"></h2>
+        <button @click="$store.router.back()" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-base font-medium transition-colors">
+          İptal
+        </button>
+      </div>
+
+      <!-- Scrollable Content -->
+      <div class="flex-1 overflow-y-auto overflow-x-hidden no-scrollbar pb-24">
+        <!-- Section: Aid Type Selector -->
+        <div class="flex flex-col pt-6 pb-2">
+          <h3 class="text-gray-900 dark:text-white text-base font-semibold px-6 mb-3">Yardım Türü Seçin</h3>
+          <div class="flex gap-3 px-6 overflow-x-auto no-scrollbar pb-2">
+            <template x-for="type in $store.data.aidTypes" :key="type.id">
+              <button @click="$store.data.aidForm.type = type.id"
+                      :class="$store.data.aidForm.type === type.id
+                        ? 'bg-primary ring-2 ring-primary ring-offset-2 ring-offset-background-light dark:ring-offset-background-dark'
+                        : 'bg-gray-200 dark:bg-surface-dark border border-transparent hover:border-gray-300 dark:hover:border-gray-700'"
+                      class="flex h-10 shrink-0 items-center justify-center gap-x-2 rounded-full pl-4 pr-5 transition-all">
+                <span class="material-symbols-outlined text-[20px]"
+                      :class="$store.data.aidForm.type === type.id ? 'text-white' : 'text-gray-600 dark:text-gray-400'"
+                      x-text="type.icon"></span>
+                <p class="text-sm font-medium"
+                   :class="$store.data.aidForm.type === type.id ? 'text-white' : 'text-gray-700 dark:text-gray-300'"
+                   x-text="type.label"></p>
+              </button>
+            </template>
+          </div>
+        </div>
+
+        <!-- Section: Value / Amount -->
+        <div class="px-6 py-4">
+          <label class="flex flex-col gap-2">
+            <span class="text-gray-900 dark:text-white text-sm font-medium">Miktar / Değer</span>
+            <div class="relative">
+              <input x-model="$store.data.aidForm.amount"
+                     class="w-full rounded-xl bg-white dark:bg-surface-dark border border-gray-300 dark:border-gray-700 focus:border-primary focus:ring-1 focus:ring-primary text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 h-14 pl-4 pr-12 text-lg font-medium transition-colors"
+                     placeholder="örn. 50"
+                     type="text">
+              <div class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm font-medium">
+                Adet
+              </div>
+            </div>
+          </label>
+        </div>
+
+        <!-- Section: Notes -->
+        <div class="px-6 py-2">
+          <label class="flex flex-col gap-2">
+            <span class="text-gray-900 dark:text-white text-sm font-medium">Notlar (Opsiyonel)</span>
+            <textarea x-model="$store.data.aidForm.notes"
+                      class="w-full rounded-xl bg-white dark:bg-surface-dark border border-gray-300 dark:border-gray-700 focus:border-primary focus:ring-1 focus:ring-primary text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 min-h-[100px] p-4 text-base font-normal resize-none transition-colors"
+                      placeholder="Yardım hakkında detay ekleyin..."></textarea>
+          </label>
+        </div>
+
+        <!-- Section: Photo Evidence -->
+        <div class="px-6 py-4">
+          <span class="text-gray-900 dark:text-white text-sm font-medium block mb-2">Kanıt Fotoğrafı</span>
+          <input type="file" accept="image/*" class="hidden" x-ref="aidPhotoInput" @change="$store.data.setAidPhotoFromFile($event.target.files[0])">
+          <template x-if="$store.data.aidForm.photoPreview">
+            <div class="mb-3 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700">
+              <img :src="$store.data.aidForm.photoPreview" alt="Kanıt Fotoğrafı" class="w-full h-40 object-cover">
+            </div>
+          </template>
+          <button @click="$refs.aidPhotoInput.click()"
+                  class="w-full h-32 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-surface-dark/50 hover:bg-gray-100 dark:hover:bg-surface-dark flex flex-col items-center justify-center gap-2 transition-colors group">
+            <div class="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+              <span class="material-symbols-outlined text-primary text-[24px]">add_a_photo</span>
+            </div>
+            <p class="text-gray-500 dark:text-gray-400 text-sm font-medium">Fotoğraf eklemek için dokunun</p>
+          </button>
+          <button x-show="$store.data.aidForm.photoPreview"
+                  @click="$store.data.clearAidPhoto()"
+                  class="mt-2 text-xs text-red-500 hover:underline">
+            Fotoğrafı kaldır
+          </button>
+        </div>
+
+        <!-- Date Confirmation Info -->
+        <div class="px-6 pb-6">
+          <div class="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-xs">
+            <span class="material-symbols-outlined text-[16px]">calendar_today</span>
+            <p>Bu işlem hanenin son yardım tarihini <span class="text-gray-700 dark:text-gray-300 font-semibold" x-text="new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' })"></span> olarak güncelleyecek</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sticky Footer Action Bar -->
+      <div class="absolute bottom-0 left-0 w-full bg-background-light dark:bg-background-dark border-t border-gray-200 dark:border-gray-800 p-6 pb-8 safe-bottom">
+        <button @click="$store.data.submitAidForm()"
+                :disabled="!$store.data.aidForm.type || $store.data.aidForm.submitting"
+                :class="!$store.data.aidForm.type ? 'opacity-50 cursor-not-allowed' : 'hover:bg-sky-500 shadow-lg shadow-primary/25'"
+                class="w-full h-12 rounded-lg bg-primary flex items-center justify-center gap-2 transition-all active:scale-[0.98]">
+          <span class="material-symbols-outlined text-white text-[20px]" x-show="!$store.data.aidForm.submitting">check_circle</span>
+          <span class="material-symbols-outlined text-white text-[20px] animate-spin" x-show="$store.data.aidForm.submitting">progress_activity</span>
+          <span class="text-white text-base font-bold tracking-wide"
+                x-text="$store.data.aidForm.submitting ? 'Kaydediliyor...' : ($store.data.aidForm.mode === 'edit' ? 'Yardımı Güncelle' : 'Onayla ve Tarihi Güncelle')"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- MAP PAGE -->
+  <!-- ============================================ -->
+  <div x-show="$store.router.isActive('map')"
+       x-transition:enter="animate-fade-in"
+       class="min-h-screen bg-background-dark"
+       x-data="mapComponent()"
+       x-init="init()">
+
+    <!-- Header -->
+    <header class="absolute top-0 left-0 right-0 z-[1000] px-4 py-4 safe-top">
+      <div class="flex items-center gap-3">
+        <button @click="$store.router.back()" class="w-11 h-11 rounded-xl bg-card-dark/90 backdrop-blur-md flex items-center justify-center shadow-lg border border-white/10">
+          <span class="material-symbols-outlined text-white">arrow_back</span>
+        </button>
+        <div class="flex-1 relative">
+          <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xl">search</span>
+          <input type="text"
+                 x-model="searchQuery"
+                 @input="filterMarkers()"
+                 class="w-full pl-12 pr-4 py-3.5 bg-card-dark/90 backdrop-blur-md rounded-xl text-white placeholder-gray-400 shadow-lg border border-white/10 focus:border-primary/50 focus:outline-none transition-colors"
+                 placeholder="Hane veya mahalle ara...">
+        </div>
+        <button @click="locateMe()" class="w-11 h-11 rounded-xl bg-primary/90 backdrop-blur-md flex items-center justify-center shadow-lg">
+          <span class="material-symbols-outlined text-white">my_location</span>
+        </button>
+      </div>
+
+      <!-- Filter Chips -->
+      <div class="flex items-center gap-2 mt-3 overflow-x-auto pb-1 scrollbar-hide">
+        <button @click="setFilter('all')"
+                :class="activeFilter === 'all' ? 'bg-primary text-white' : 'bg-card-dark/80 text-gray-300 border border-white/10'"
+                class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all">
+          Tümü
+          <span class="ml-1 opacity-70" x-text="'(' + $store.data.stats.total + ')'"></span>
+        </button>
+        <button @click="setFilter('red')"
+                :class="activeFilter === 'red' ? 'bg-red-500 text-white' : 'bg-card-dark/80 text-gray-300 border border-white/10'"
+                class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-red-500" :class="activeFilter === 'red' && 'bg-white'"></span>
+          Acil
+          <span class="opacity-70" x-text="'(' + $store.data.stats.red + ')'"></span>
+        </button>
+        <button @click="setFilter('yellow')"
+                :class="activeFilter === 'yellow' ? 'bg-yellow-500 text-black' : 'bg-card-dark/80 text-gray-300 border border-white/10'"
+                class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-yellow-500" :class="activeFilter === 'yellow' && 'bg-black'"></span>
+          Dikkat
+          <span class="opacity-70" x-text="'(' + $store.data.stats.yellow + ')'"></span>
+        </button>
+        <button @click="setFilter('green')"
+                :class="activeFilter === 'green' ? 'bg-green-500 text-white' : 'bg-card-dark/80 text-gray-300 border border-white/10'"
+                class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-green-500" :class="activeFilter === 'green' && 'bg-white'"></span>
+          Güncel
+          <span class="opacity-70" x-text="'(' + $store.data.stats.green + ')'"></span>
+        </button>
+        <button @click="setFilter('nearby')"
+                :class="activeFilter === 'nearby' ? 'bg-sky-500 text-white' : 'bg-card-dark/80 text-gray-300 border border-white/10'"
+                class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all flex items-center gap-2">
+          <span class="material-symbols-outlined text-[16px]" :class="activeFilter === 'nearby' ? 'text-white' : 'text-sky-300'">near_me</span>
+          Yakınımda
+          <span class="opacity-70" x-text="'(' + nearbyCount + ')'"></span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Map Container -->
+    <div id="map" class="w-full h-screen"></div>
+
+    <!-- Selected Household Card (Bottom Sheet) -->
+    <div x-show="selectedMarkerHousehold"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="translate-y-full opacity-0"
+         x-transition:enter-end="translate-y-0 opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="translate-y-0 opacity-100"
+         x-transition:leave-end="translate-y-full opacity-0"
+         class="fixed bottom-20 left-4 right-4 z-[1001]">
+
+      <div class="bg-card-dark/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 overflow-hidden">
+        <!-- Close button -->
+        <button @click="selectedMarkerHousehold = null"
+                class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center z-10">
+          <span class="material-symbols-outlined text-white text-lg">close</span>
+        </button>
+
+        <!-- Card Content -->
+        <div class="p-4">
+          <!-- Header with status -->
+          <div class="flex items-start gap-3 mb-3">
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center"
+                 :class="{
+                   'bg-red-500/20': $store.data.getStatus(selectedMarkerHousehold?.daysSinceAid, selectedMarkerHousehold?.needLevel) === 'red',
+                   'bg-yellow-500/20': $store.data.getStatus(selectedMarkerHousehold?.daysSinceAid, selectedMarkerHousehold?.needLevel) === 'yellow',
+                   'bg-green-500/20': $store.data.getStatus(selectedMarkerHousehold?.daysSinceAid, selectedMarkerHousehold?.needLevel) === 'green'
+                 }">
+              <span class="material-symbols-outlined text-2xl"
+                    :class="{
+                      'text-red-400': $store.data.getStatus(selectedMarkerHousehold?.daysSinceAid, selectedMarkerHousehold?.needLevel) === 'red',
+                      'text-yellow-400': $store.data.getStatus(selectedMarkerHousehold?.daysSinceAid, selectedMarkerHousehold?.needLevel) === 'yellow',
+                      'text-green-400': $store.data.getStatus(selectedMarkerHousehold?.daysSinceAid, selectedMarkerHousehold?.needLevel) === 'green'
+                    }">home</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3 class="text-white font-semibold text-lg" x-text="$store.data.getHouseholdDisplayName(selectedMarkerHousehold)"></h3>
+              <p class="text-gray-400 text-sm truncate" x-text="selectedMarkerHousehold?.address || selectedMarkerHousehold?.neighborhood"></p>
+            </div>
+          </div>
+
+          <!-- Info Grid -->
+          <div class="grid grid-cols-3 gap-3 mb-4">
+            <div class="bg-white/5 rounded-xl p-3 text-center">
+              <span class="material-symbols-outlined text-primary mb-1">schedule</span>
+              <p class="text-white font-bold text-lg" x-text="selectedMarkerHousehold?.daysSinceAid || '-'"></p>
+              <p class="text-gray-400 text-xs">Gün Önce</p>
+            </div>
+            <div class="bg-white/5 rounded-xl p-3 text-center">
+              <span class="material-symbols-outlined text-primary mb-1">group</span>
+              <p class="text-white font-bold text-lg" x-text="$store.data.getMembersCounts(selectedMarkerHousehold || {}).total"></p>
+              <p class="text-gray-400 text-xs">Kişi</p>
+            </div>
+            <div class="bg-white/5 rounded-xl p-3 text-center">
+              <span class="material-symbols-outlined text-primary mb-1">child_care</span>
+              <p class="text-white font-bold text-lg" x-text="$store.data.getMembersCounts(selectedMarkerHousehold || {}).children"></p>
+              <p class="text-gray-400 text-xs">Çocuk</p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 text-xs text-gray-400 mb-4" x-show="userLocation">
+            <span class="material-symbols-outlined text-primary text-[16px]">near_me</span>
+            <span x-text="formatDistance(getDistanceForHousehold(selectedMarkerHousehold?.id))"></span>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex gap-3">
+            <button @click="openNavigation()"
+                    class="flex-1 bg-white/10 hover:bg-white/15 text-white py-3 rounded-xl flex items-center justify-center gap-2 transition-colors">
+              <span class="material-symbols-outlined">directions</span>
+              Yol Tarifi
+            </button>
+            <button @click="callHousehold()"
+                    class="w-14 bg-green-500/20 hover:bg-green-500/30 text-green-400 py-3 rounded-xl flex items-center justify-center transition-colors">
+              <span class="material-symbols-outlined">call</span>
+            </button>
+            <button @click="viewHouseholdDetail()"
+                    class="flex-1 bg-primary hover:bg-primary-dark text-white py-3 rounded-xl flex items-center justify-center gap-2 transition-colors">
+              <span class="material-symbols-outlined">visibility</span>
+              Detaylar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Floating Legend (shown when no card selected) -->
+    <div x-show="!selectedMarkerHousehold"
+         class="absolute bottom-24 left-4 z-[1000] bg-card-dark/90 backdrop-blur-md rounded-xl p-3 shadow-lg border border-white/10">
+      <div class="flex items-center gap-4 text-xs">
+        <div class="flex items-center gap-2">
+          <div class="w-3 h-3 rounded-full bg-red-500 animate-pulse"></div>
+          <span class="text-white">Acil</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+          <span class="text-white">Dikkat</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="w-3 h-3 rounded-full bg-green-500"></div>
+          <span class="text-white">Güncel</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Pill -->
+    <div class="absolute bottom-24 right-4 z-[1000] bg-card-dark/90 backdrop-blur-md rounded-xl px-4 py-2 shadow-lg border border-white/10">
+      <p class="text-white text-sm font-medium">
+        <span class="text-primary" x-text="visibleMarkersCount"></span>
+        <span class="text-gray-400">/ <span x-text="$store.data.stats.total"></span> hane</span>
+      </p>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- ADMIN PANEL -->
+  <!-- ============================================ -->
+  <div x-show="$store.router.isActive('admin-panel')"
+       x-transition:enter="animate-fade-in"
+       class="relative flex min-h-screen w-full flex-col bg-background-light dark:bg-background-dark pb-20"
+       x-data="{ activeTab: 'users', searchQuery: '' }">
+
+    <!-- Top App Bar -->
+    <header class="flex items-center px-4 py-4 justify-between bg-background-light dark:bg-background-dark z-10 safe-top">
+      <div class="flex items-center gap-3">
+        <button @click="$store.router.back()" class="flex items-center justify-center rounded-full w-10 h-10 hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+          <span class="material-symbols-outlined text-slate-900 dark:text-white">arrow_back</span>
+        </button>
+        <h2 class="text-xl font-bold leading-tight tracking-tight">Yönetim Paneli</h2>
+      </div>
+      <div class="flex items-center justify-end gap-2">
+        <button class="flex items-center justify-center rounded-full w-10 h-10 hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+          <span class="material-symbols-outlined text-slate-900 dark:text-white">settings</span>
+        </button>
+        <button class="flex items-center justify-center rounded-full w-10 h-10 hover:bg-black/5 dark:hover:bg-white/5 transition-colors overflow-hidden">
+          <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+            <span class="material-symbols-outlined text-white text-lg">person</span>
+          </div>
+        </button>
+      </div>
+    </header>
+
+    <!-- Segmented Controls -->
+    <div class="px-4 pb-4">
+      <div class="flex h-12 w-full items-center rounded-lg bg-slate-200 dark:bg-card-dark p-1">
+        <button @click="activeTab = 'users'"
+                :class="activeTab === 'users' ? 'bg-primary shadow-sm text-white' : 'text-slate-600 dark:text-text-secondary-dark hover:text-slate-900 dark:hover:text-white'"
+                class="flex h-full flex-1 items-center justify-center rounded-lg text-sm font-semibold transition-all">
+          Kullanıcılar
+        </button>
+        <button @click="activeTab = 'regions'"
+                :class="activeTab === 'regions' ? 'bg-primary shadow-sm text-white' : 'text-slate-600 dark:text-text-secondary-dark hover:text-slate-900 dark:hover:text-white'"
+                class="flex h-full flex-1 items-center justify-center rounded-lg text-sm font-medium transition-all">
+          Bölgeler
+        </button>
+      </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="px-4 pb-2">
+      <div class="flex w-full items-center rounded-lg h-12 bg-white dark:bg-card-dark border border-slate-200 dark:border-transparent focus-within:border-primary dark:focus-within:border-primary transition-colors overflow-hidden">
+        <div class="pl-3 flex items-center justify-center text-text-secondary-light dark:text-text-secondary-dark">
+          <span class="material-symbols-outlined">search</span>
+        </div>
+        <input x-model="searchQuery"
+               class="flex-1 w-full h-full bg-transparent border-none focus:ring-0 text-slate-900 dark:text-white placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark px-3 text-base"
+               placeholder="İsim veya rol ile ara...">
+      </div>
+    </div>
+
+    <!-- Content Area -->
+    <div class="flex-1 overflow-y-auto pb-24">
+      <!-- Users Tab -->
+      <template x-if="activeTab === 'users'">
+        <div>
+          <!-- Meta Text / List Header -->
+          <div class="flex items-center justify-between px-4 py-3">
+            <p class="text-text-secondary-light dark:text-text-secondary-dark text-sm font-medium">
+              Yetkili Personel (<span x-text="$store.admin.users.filter(u => !searchQuery || (u.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || (u.username || '').toLowerCase().includes(searchQuery.toLowerCase())).length"></span>)
+            </p>
+            <button class="text-primary text-sm font-medium hover:underline">Filtre</button>
+          </div>
+
+          <!-- List of Users -->
+          <div class="flex flex-col gap-3 px-4">
+            <template x-for="user in $store.admin.users.filter(u => !searchQuery || (u.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || (u.username || '').toLowerCase().includes(searchQuery.toLowerCase()))" :key="user.id">
+              <div class="flex items-center justify-between p-3 rounded-lg bg-card-light dark:bg-card-dark shadow-sm border border-slate-100 dark:border-slate-800/50"
+                   :class="{ 'opacity-60': user.isActive === false }">
+                <div class="flex items-center gap-3">
+                  <div class="relative">
+                    <div class="h-12 w-12 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center"
+                         :class="{ 'grayscale': user.isActive === false }">
+                      <span class="material-symbols-outlined text-slate-500 dark:text-slate-400">person</span>
+                    </div>
+                    <span x-show="user.isActive !== false"
+                          class="absolute bottom-0 right-0 block h-3 w-3 rounded-full bg-green-500 ring-2 ring-white dark:ring-card-dark"></span>
+                  </div>
+                  <div class="flex flex-col">
+                    <p class="text-slate-900 dark:text-white text-base font-semibold line-clamp-1" x-text="user.name"></p>
+                    <p class="text-xs font-medium text-text-secondary-light dark:text-text-secondary-dark"
+                       x-text="user.role === 'admin' ? 'Admin' : 'Gönüllü'"></p>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400" x-text="user.role === 'volunteer' ? $store.data.getRegionName(user.assignedRegionId) : 'Tüm Bölgeler'"></p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-1">
+                  <template x-if="user.isActive !== false">
+                    <button @click="$store.admin.openUserForm(user)" class="flex h-9 w-9 items-center justify-center rounded-full text-text-secondary-light dark:text-text-secondary-dark hover:bg-slate-100 dark:hover:bg-white/5 hover:text-primary transition-colors">
+                      <span class="material-symbols-outlined text-[20px]">edit</span>
+                    </button>
+                  </template>
+                  <template x-if="user.isActive === false">
+                    <button @click="$store.admin.toggleUserActive(user, true)" class="flex h-9 w-9 items-center justify-center rounded-full text-primary hover:bg-slate-100 dark:hover:bg-white/5 transition-colors" title="Yeniden Aktifleştir">
+                      <span class="material-symbols-outlined text-[20px]">replay</span>
+                    </button>
+                  </template>
+                  <button @click="$store.admin.deleteUserDoc(user.id)" class="flex h-9 w-9 items-center justify-center rounded-full text-red-500/80 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-600 transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">delete</span>
+                  </button>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+      </template>
+
+      <!-- Regions Tab -->
+      <template x-if="activeTab === 'regions'">
+        <div class="px-4 py-4 space-y-3">
+          <template x-for="region in $store.admin.regions.filter(r => !searchQuery || (r.name || '').toLowerCase().includes(searchQuery.toLowerCase()))" :key="region.id">
+            <div class="flex items-center justify-between p-3 rounded-lg bg-card-light dark:bg-card-dark shadow-sm border border-slate-100 dark:border-slate-800/50">
+              <div>
+                <p class="text-slate-900 dark:text-white text-base font-semibold" x-text="region.name"></p>
+                <p class="text-xs text-slate-500 dark:text-slate-400" x-text="(region.city || '') + (region.district ? ' / ' + region.district : '')"></p>
+              </div>
+              <div class="flex items-center gap-2">
+                <button @click="$store.admin.openRegionStats(region)" class="flex h-9 w-9 items-center justify-center rounded-full text-primary hover:bg-slate-100 dark:hover:bg-white/5 transition-colors" title="İstatistik">
+                  <span class="material-symbols-outlined text-[20px]">bar_chart</span>
+                </button>
+                <button @click="$store.admin.openRegionForm(region)" class="flex h-9 w-9 items-center justify-center rounded-full text-text-secondary-light dark:text-text-secondary-dark hover:bg-slate-100 dark:hover:bg-white/5 hover:text-primary transition-colors">
+                  <span class="material-symbols-outlined text-[20px]">edit</span>
+                </button>
+                <button @click="$store.admin.deleteRegion(region.id)" class="flex h-9 w-9 items-center justify-center rounded-full text-red-500/80 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-600 transition-colors">
+                  <span class="material-symbols-outlined text-[20px]">delete</span>
+                </button>
+              </div>
+            </div>
+          </template>
+          <div x-show="$store.admin.regions.length === 0" class="flex flex-col items-center justify-center py-12 text-slate-500 dark:text-slate-400">
+            <span class="material-symbols-outlined text-5xl mb-3">map</span>
+            <p class="text-base font-medium">Bölge bulunamadı</p>
+            <p class="text-sm text-center mt-1">Yeni bölge ekleyerek başlayabilirsiniz.</p>
+          </div>
+        </div>
+      </template>
+    </div>
+
+    <!-- Floating Action Button -->
+    <div class="absolute bottom-24 right-6">
+      <button @click="activeTab === 'users' ? $store.admin.openUserForm() : $store.admin.openRegionForm()"
+              class="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-lg shadow-primary/40 hover:bg-sky-500 transition-transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:ring-offset-background-dark">
+        <span class="material-symbols-outlined text-[28px]">add</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- USER FORM -->
+  <!-- ============================================ -->
+  <div x-show="$store.router.isActive('user-form')"
+       x-transition:enter="animate-fade-in"
+       class="relative flex min-h-screen w-full flex-col bg-background-light dark:bg-background-dark pb-24">
+    <header class="sticky top-0 z-20 flex items-center justify-between bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md p-4 safe-top border-b border-slate-200 dark:border-slate-800">
+      <div class="flex items-center gap-3">
+        <button @click="$store.router.back()" class="flex items-center justify-center rounded-full w-10 h-10 hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+          <span class="material-symbols-outlined text-slate-900 dark:text-white">arrow_back</span>
+        </button>
+        <h2 class="text-xl font-bold leading-tight tracking-tight text-slate-900 dark:text-white"
+            x-text="$store.admin.userForm.mode === 'edit' ? 'Kullanıcı Düzenle' : 'Kullanıcı Ekle'"></h2>
+      </div>
+    </header>
+
+    <div class="flex-1 overflow-y-auto px-4 py-6 space-y-5">
+      <div class="space-y-2">
+        <label class="text-sm font-medium text-slate-700 dark:text-slate-200">İsim</label>
+        <input x-model="$store.admin.userForm.name"
+               class="w-full h-12 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark px-4 text-sm text-slate-900 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary"
+               placeholder="Ad Soyad">
+      </div>
+
+      <div class="space-y-2" x-show="$store.admin.userForm.mode === 'create'">
+        <label class="text-sm font-medium text-slate-700 dark:text-slate-200">Kullanıcı Adı</label>
+        <input x-model="$store.admin.userForm.username"
+               class="w-full h-12 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark px-4 text-sm text-slate-900 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary"
+               placeholder="kullanici.adi">
+      </div>
+      <div class="space-y-2" x-show="$store.admin.userForm.mode === 'edit'">
+        <label class="text-sm font-medium text-slate-700 dark:text-slate-200">Kullanıcı Adı</label>
+        <input x-model="$store.admin.userForm.username" disabled
+               class="w-full h-12 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 px-4 text-sm text-slate-900 dark:text-white opacity-70">
+      </div>
+
+      <div class="space-y-2" x-show="$store.admin.userForm.mode === 'create'">
+        <label class="text-sm font-medium text-slate-700 dark:text-slate-200">Şifre</label>
+        <input type="password" x-model="$store.admin.userForm.password"
+               class="w-full h-12 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark px-4 text-sm text-slate-900 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary"
+               placeholder="••••••••">
+      </div>
+
+      <div class="space-y-2">
+        <label class="text-sm font-medium text-slate-700 dark:text-slate-200">Rol</label>
+        <select x-model="$store.admin.userForm.role"
+                class="w-full h-12 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark px-4 text-sm text-slate-900 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary">
+          <option value="admin">Admin</option>
+          <option value="volunteer">Gönüllü</option>
+        </select>
+      </div>
+
+      <div class="space-y-2" x-show="$store.admin.userForm.role === 'volunteer'">
+        <label class="text-sm font-medium text-slate-700 dark:text-slate-200">Bölge</label>
+        <select x-model="$store.admin.userForm.assignedRegionId"
+                class="w-full h-12 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark px-4 text-sm text-slate-900 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary">
+          <option value="">Bölge seçin</option>
+          <template x-for="region in $store.admin.regions" :key="region.id">
+            <option :value="region.id" x-text="region.name"></option>
+          </template>
+        </select>
+      </div>
+
+      <div class="flex items-center justify-between rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-3">
+        <div>
+          <p class="text-sm font-medium text-slate-700 dark:text-slate-200">Aktif Hesap</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Pasif kullanıcı giriş yapamaz</p>
+        </div>
+        <button @click="$store.admin.userForm.isActive = !$store.admin.userForm.isActive"
+                class="w-12 h-7 rounded-full transition-colors relative"
+                :class="$store.admin.userForm.isActive ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-600'">
+          <div class="w-5 h-5 bg-white rounded-full absolute top-1 transition-all shadow-sm"
+               :class="$store.admin.userForm.isActive ? 'right-1' : 'left-1'"></div>
+        </button>
+      </div>
+    </div>
+
+    <div class="fixed bottom-0 left-0 w-full bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 p-4 safe-bottom">
+      <button @click="$store.admin.submitUserForm()"
+              :disabled="$store.admin.userForm.submitting"
+              class="w-full h-12 rounded-xl bg-primary text-white font-bold shadow-lg shadow-primary/20 hover:bg-primary-dark disabled:opacity-60">
+        Kaydet
+      </button>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- REGION FORM -->
+  <!-- ============================================ -->
+  <div x-show="$store.router.isActive('region-form')"
+       x-transition:enter="animate-fade-in"
+       class="relative flex min-h-screen w-full flex-col bg-background-light dark:bg-background-dark pb-24">
+    <header class="sticky top-0 z-20 flex items-center justify-between bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md p-4 safe-top border-b border-slate-200 dark:border-slate-800">
+      <div class="flex items-center gap-3">
+        <button @click="$store.router.back()" class="flex items-center justify-center rounded-full w-10 h-10 hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+          <span class="material-symbols-outlined text-slate-900 dark:text-white">arrow_back</span>
+        </button>
+        <h2 class="text-xl font-bold leading-tight tracking-tight text-slate-900 dark:text-white"
+            x-text="$store.admin.regionForm.mode === 'edit' ? 'Bölge Düzenle' : 'Bölge Ekle'"></h2>
+      </div>
+    </header>
+
+    <div class="flex-1 overflow-y-auto px-4 py-6 space-y-5">
+      <div class="space-y-2">
+        <label class="text-sm font-medium text-slate-700 dark:text-slate-200">Bölge Adı</label>
+        <input x-model="$store.admin.regionForm.name"
+               class="w-full h-12 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark px-4 text-sm text-slate-900 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary"
+               placeholder="Bölge adı">
+      </div>
+      <div class="space-y-2">
+        <label class="text-sm font-medium text-slate-700 dark:text-slate-200">Şehir</label>
+        <input x-model="$store.admin.regionForm.city"
+               class="w-full h-12 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark px-4 text-sm text-slate-900 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary"
+               placeholder="Şehir">
+      </div>
+      <div class="space-y-2">
+        <label class="text-sm font-medium text-slate-700 dark:text-slate-200">İlçe</label>
+        <input x-model="$store.admin.regionForm.district"
+               class="w-full h-12 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark px-4 text-sm text-slate-900 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary"
+               placeholder="İlçe">
+      </div>
+
+      <div class="space-y-2">
+        <div class="flex items-center justify-between">
+          <label class="text-sm font-medium text-slate-700 dark:text-slate-200">Gönüllüler</label>
+          <span class="text-xs text-slate-400">Birden fazla seçilebilir</span>
+        </div>
+        <div class="space-y-2">
+          <template x-for="volunteer in $store.admin.getVolunteerOptions()" :key="volunteer.id">
+            <label class="flex items-start gap-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark p-3">
+              <input type="checkbox"
+                     class="mt-1 h-4 w-4 text-primary border-slate-300 rounded focus:ring-primary"
+                     :value="volunteer.id"
+                     x-model="$store.admin.regionForm.volunteerIds">
+              <div class="flex-1">
+                <p class="text-sm font-medium text-slate-900 dark:text-white" x-text="volunteer.name || volunteer.username"></p>
+                <p class="text-xs text-slate-500 dark:text-slate-400"
+                   x-text="volunteer.assignedRegionId ? ('Mevcut: ' + $store.data.getRegionName(volunteer.assignedRegionId)) : 'Atanmamış'"></p>
+              </div>
+            </label>
+          </template>
+          <div x-show="$store.admin.getVolunteerOptions().length === 0"
+               class="text-sm text-slate-500 dark:text-slate-400 text-center py-4">
+            Henüz gönüllü yok.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="fixed bottom-0 left-0 w-full bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 p-4 safe-bottom">
+      <button @click="$store.admin.submitRegionForm()"
+              :disabled="$store.admin.regionForm.submitting"
+              class="w-full h-12 rounded-xl bg-primary text-white font-bold shadow-lg shadow-primary/20 hover:bg-primary-dark disabled:opacity-60">
+        Kaydet
+      </button>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- REGION STATS -->
+  <!-- ============================================ -->
+  <div x-show="$store.router.isActive('region-stats')"
+       x-transition:enter="animate-fade-in"
+       class="relative flex min-h-screen w-full flex-col bg-background-light dark:bg-background-dark pb-24">
+    <header class="sticky top-0 z-20 flex items-center justify-between bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md p-4 safe-top border-b border-slate-200 dark:border-slate-800">
+      <div class="flex items-center gap-3">
+        <button @click="$store.router.back()" class="flex items-center justify-center rounded-full w-10 h-10 hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+          <span class="material-symbols-outlined text-slate-900 dark:text-white">arrow_back</span>
+        </button>
+        <h2 class="text-xl font-bold leading-tight tracking-tight text-slate-900 dark:text-white" x-text="$store.admin.selectedRegion?.name || 'Bölge'"></h2>
+      </div>
+    </header>
+
+    <div class="flex-1 overflow-y-auto px-4 py-6 space-y-4">
+      <div class="rounded-2xl bg-white dark:bg-surface-dark p-5 shadow-sm border border-slate-100 dark:border-slate-700/60">
+        <h3 class="text-lg font-bold text-slate-900 dark:text-white">Yardım İstatistikleri</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400">Son dönem dağılımları</p>
+        <div class="mt-4 grid grid-cols-3 gap-3">
+          <div class="rounded-xl bg-slate-50 dark:bg-slate-800/40 p-4 text-center">
+            <p class="text-xs text-slate-500 dark:text-slate-400">Son Hafta</p>
+            <p class="text-2xl font-bold text-slate-900 dark:text-white" x-text="$store.admin.regionStats.week"></p>
+          </div>
+          <div class="rounded-xl bg-slate-50 dark:bg-slate-800/40 p-4 text-center">
+            <p class="text-xs text-slate-500 dark:text-slate-400">Son Ay</p>
+            <p class="text-2xl font-bold text-slate-900 dark:text-white" x-text="$store.admin.regionStats.month"></p>
+          </div>
+          <div class="rounded-xl bg-slate-50 dark:bg-slate-800/40 p-4 text-center">
+            <p class="text-xs text-slate-500 dark:text-slate-400">Son Yıl</p>
+            <p class="text-2xl font-bold text-slate-900 dark:text-white" x-text="$store.admin.regionStats.year"></p>
+          </div>
+        </div>
+        <p class="mt-4 text-xs text-slate-400" x-text="$store.admin.regionStats.updatedAt ? 'Güncellenme: ' + new Date($store.admin.regionStats.updatedAt).toLocaleString('tr-TR') : ''"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- PROFILE PAGE -->
+  <!-- ============================================ -->
+  <div x-show="$store.router.isActive('profile')"
+       x-transition:enter="animate-fade-in"
+       class="min-h-screen bg-background-light dark:bg-background-dark pb-20">
+
+    <!-- Header -->
+    <header class="flex items-center px-4 py-4 justify-between bg-background-light dark:bg-background-dark z-10 safe-top border-b border-slate-200 dark:border-slate-800">
+      <div class="flex items-center gap-3">
+        <button @click="$store.router.back()" class="flex items-center justify-center rounded-full w-10 h-10 hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+          <span class="material-symbols-outlined text-slate-900 dark:text-white">arrow_back</span>
+        </button>
+        <h2 class="text-xl font-bold leading-tight tracking-tight text-slate-900 dark:text-white">Profil</h2>
+      </div>
+      <button class="flex items-center justify-center rounded-full w-10 h-10 hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+        <span class="material-symbols-outlined text-slate-900 dark:text-white">edit</span>
+      </button>
+    </header>
+
+    <!-- Profile Card -->
+    <div class="px-4 py-6">
+      <div class="flex flex-col items-center text-center py-8 px-4 rounded-2xl bg-card-light dark:bg-card-dark shadow-sm border border-slate-100 dark:border-slate-800/50">
+        <div class="relative mb-4">
+          <div class="w-24 h-24 bg-primary rounded-full flex items-center justify-center ring-4 ring-primary/20">
+            <span class="material-symbols-outlined text-white text-5xl">person</span>
+          </div>
+          <span class="absolute bottom-1 right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white dark:border-card-dark"></span>
+        </div>
+        <h2 class="text-slate-900 dark:text-white font-bold text-xl" x-text="$store.auth.userData?.name || 'Kullanıcı'"></h2>
+        <p class="text-slate-500 dark:text-slate-400 text-sm mt-1" x-text="$store.auth.user?.email"></p>
+        <p class="text-slate-500 dark:text-slate-400 text-xs mt-1" x-show="$store.auth.userData?.assignedRegionId"
+           x-text="$store.data.getRegionName($store.auth.userData?.assignedRegionId)"></p>
+        <span class="mt-3 px-4 py-1.5 rounded-full text-sm font-medium"
+              :class="$store.auth.isAdmin ? 'bg-primary/10 text-primary' : 'bg-green-500/10 text-green-500'"
+              x-text="$store.auth.isAdmin ? 'Admin' : 'Gönüllü'"></span>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="px-4 pb-4">
+      <div class="grid grid-cols-3 gap-3">
+        <div class="flex flex-col items-center p-4 rounded-xl bg-card-light dark:bg-card-dark shadow-sm border border-slate-100 dark:border-slate-800/50">
+          <span class="text-2xl font-bold text-slate-900 dark:text-white">24</span>
+          <span class="text-xs text-slate-500 dark:text-slate-400 mt-1">Ziyaret</span>
+        </div>
+        <div class="flex flex-col items-center p-4 rounded-xl bg-card-light dark:bg-card-dark shadow-sm border border-slate-100 dark:border-slate-800/50">
+          <span class="text-2xl font-bold text-slate-900 dark:text-white">12</span>
+          <span class="text-xs text-slate-500 dark:text-slate-400 mt-1">Yardım</span>
+        </div>
+        <div class="flex flex-col items-center p-4 rounded-xl bg-card-light dark:bg-card-dark shadow-sm border border-slate-100 dark:border-slate-800/50">
+          <span class="text-2xl font-bold text-primary">8</span>
+          <span class="text-xs text-slate-500 dark:text-slate-400 mt-1">Hane</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Section Header -->
+    <div class="px-4 py-3">
+      <h3 class="text-slate-500 dark:text-slate-400 text-sm font-medium uppercase tracking-wide">Ayarlar</h3>
+    </div>
+
+    <!-- Settings -->
+    <div class="px-4 space-y-2">
+      <div class="flex items-center justify-between p-4 rounded-xl bg-card-light dark:bg-card-dark shadow-sm border border-slate-100 dark:border-slate-800/50">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center">
+            <span class="material-symbols-outlined text-purple-500">dark_mode</span>
+          </div>
+          <span class="text-slate-900 dark:text-white font-medium">Karanlık Mod</span>
+        </div>
+        <button @click="$store.ui.toggleDarkMode()"
+                class="w-12 h-7 rounded-full transition-colors relative"
+                :class="$store.ui.darkMode ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-600'">
+          <div class="w-5 h-5 bg-white rounded-full absolute top-1 transition-all shadow-sm"
+               :class="$store.ui.darkMode ? 'right-1' : 'left-1'"></div>
+        </button>
+      </div>
+
+      <div class="flex items-center gap-3 p-4 rounded-xl bg-card-light dark:bg-card-dark shadow-sm border border-slate-100 dark:border-slate-800/50 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+        <div class="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
+          <span class="material-symbols-outlined text-blue-500">notifications</span>
+        </div>
+        <span class="text-slate-900 dark:text-white font-medium flex-1">Bildirimler</span>
+        <span class="material-symbols-outlined text-slate-400">chevron_right</span>
+      </div>
+
+      <div class="flex items-center gap-3 p-4 rounded-xl bg-card-light dark:bg-card-dark shadow-sm border border-slate-100 dark:border-slate-800/50 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+        <div class="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
+          <span class="material-symbols-outlined text-green-500">help</span>
+        </div>
+        <span class="text-slate-900 dark:text-white font-medium flex-1">Yardım & Destek</span>
+        <span class="material-symbols-outlined text-slate-400">chevron_right</span>
+      </div>
+
+      <div class="flex items-center gap-3 p-4 rounded-xl bg-card-light dark:bg-card-dark shadow-sm border border-slate-100 dark:border-slate-800/50 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+        <div class="w-10 h-10 rounded-full bg-slate-500/10 flex items-center justify-center">
+          <span class="material-symbols-outlined text-slate-500">info</span>
+        </div>
+        <span class="text-slate-900 dark:text-white font-medium flex-1">Hakkında</span>
+        <span class="text-slate-500 dark:text-slate-400 text-sm" x-text="'v' + $store.system.appVersion"></span>
+      </div>
+    </div>
+
+    <!-- Sync Section -->
+    <div class="px-4 py-3">
+      <h3 class="text-slate-500 dark:text-slate-400 text-sm font-medium uppercase tracking-wide">Senkronizasyon</h3>
+    </div>
+
+    <div class="px-4 space-y-2">
+      <!-- Connection Status -->
+      <div class="flex items-center justify-between p-4 rounded-xl shadow-sm border"
+           :class="$store.ui.offline ? 'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30' : 'bg-green-50 dark:bg-green-500/10 border-green-200 dark:border-green-500/30'">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full flex items-center justify-center"
+               :class="$store.ui.offline ? 'bg-amber-500/20' : 'bg-green-500/20'">
+            <span class="material-symbols-outlined"
+                  :class="$store.ui.offline ? 'text-amber-500' : 'text-green-500'"
+                  x-text="$store.ui.offline ? 'cloud_off' : 'cloud_done'"></span>
+          </div>
+          <div>
+            <span class="font-medium"
+                  :class="$store.ui.offline ? 'text-amber-700 dark:text-amber-400' : 'text-green-700 dark:text-green-400'"
+                  x-text="$store.ui.offline ? 'Çevrimdışı' : 'Çevrimiçi'"></span>
+            <p class="text-xs text-slate-500 dark:text-slate-400" x-text="$store.ui.getLastSyncText()"></p>
+          </div>
+        </div>
+        <div class="w-3 h-3 rounded-full animate-pulse"
+             :class="$store.ui.offline ? 'bg-amber-500' : 'bg-green-500'"></div>
+      </div>
+
+      <!-- Manual Sync Button -->
+      <button @click="$store.ui.syncData()"
+              :disabled="$store.ui.offline || $store.ui.syncing"
+              class="w-full flex items-center justify-between p-4 rounded-xl bg-card-light dark:bg-card-dark shadow-sm border border-slate-100 dark:border-slate-800/50 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+            <span class="material-symbols-outlined text-primary"
+                  :class="{ 'animate-spin': $store.ui.syncing }">sync</span>
+          </div>
+          <span class="text-slate-900 dark:text-white font-medium" x-text="$store.ui.syncing ? 'Senkronize Ediliyor...' : 'Manuel Senkronizasyon'"></span>
+        </div>
+        <span class="material-symbols-outlined text-slate-400" x-show="!$store.ui.syncing">chevron_right</span>
+      </button>
+
+      <!-- Offline Data Info -->
+      <div x-show="$store.ui.offline" class="p-4 rounded-xl bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+        <div class="flex items-start gap-3">
+          <span class="material-symbols-outlined text-slate-500 mt-0.5">info</span>
+          <div>
+            <p class="text-slate-700 dark:text-slate-300 text-sm font-medium">Çevrimdışı Moddasınız</p>
+            <p class="text-slate-500 dark:text-slate-400 text-xs mt-1">
+              Önbellekte kayıtlı veriler gösterilmektedir. Bağlantı kurulduğunda veriler otomatik senkronize edilecektir.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Logout -->
+    <div class="px-4 py-6">
+      <button @click="$store.auth.logout()"
+              class="w-full py-3.5 bg-red-50 dark:bg-red-500/10 text-red-500 font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors">
+        <span class="material-symbols-outlined">logout</span>
+        Çıkış Yap
+      </button>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- BOTTOM NAVIGATION -->
+  <!-- ============================================ -->
+  <nav x-show="!$store.router.isActive('login')
+       && !$store.router.isActive('add-aid-modal')
+       && !$store.router.isActive('household-form')
+       && !$store.router.isActive('household-detail')
+       && !$store.router.isActive('user-form')
+       && !$store.router.isActive('region-form')
+       && !$store.router.isActive('region-stats')"
+       class="fixed bottom-0 left-0 right-0 bg-surface-dark border-t border-gray-800 safe-bottom z-[900]">
+    <div class="flex items-center justify-evenly py-1.5">
+      <button @click="$store.router.navigate($store.auth.isAdmin ? 'admin-dashboard' : 'volunteer-dashboard')"
+              class="flex flex-col items-center justify-center min-w-[48px] py-1 text-gray-400"
+              :class="{ '!text-primary': $store.router.isActive('admin-dashboard') || $store.router.isActive('volunteer-dashboard') }">
+        <span class="material-symbols-outlined text-[22px]" :class="{ 'filled': $store.router.isActive('admin-dashboard') || $store.router.isActive('volunteer-dashboard') }">home</span>
+        <span class="text-[10px] mt-0.5">Ana</span>
+      </button>
+
+      <button @click="$store.router.navigate('regions-list')"
+              class="flex flex-col items-center justify-center min-w-[48px] py-1 text-gray-400"
+              :class="{ '!text-primary': $store.router.isActive('regions-list') }">
+        <span class="material-symbols-outlined text-[22px]" :class="{ 'filled': $store.router.isActive('regions-list') }">location_city</span>
+        <span class="text-[10px] mt-0.5">Bölge</span>
+      </button>
+
+      <button @click="$store.router.navigate('household-list')"
+              class="flex flex-col items-center justify-center min-w-[48px] py-1 text-gray-400"
+              :class="{ '!text-primary': $store.router.isActive('household-list') || $store.router.isActive('household-detail') }">
+        <span class="material-symbols-outlined text-[22px]" :class="{ 'filled': $store.router.isActive('household-list') || $store.router.isActive('household-detail') }">groups</span>
+        <span class="text-[10px] mt-0.5">Hane</span>
+      </button>
+
+      <button @click="$store.router.navigate('map')"
+              class="flex flex-col items-center justify-center min-w-[48px] py-1 text-gray-400"
+              :class="{ '!text-primary': $store.router.isActive('map') }">
+        <span class="material-symbols-outlined text-[22px]" :class="{ 'filled': $store.router.isActive('map') }">map</span>
+        <span class="text-[10px] mt-0.5">Harita</span>
+      </button>
+
+      <button x-show="$store.auth.isAdmin"
+              @click="$store.router.navigate('admin-panel')"
+              class="flex flex-col items-center justify-center min-w-[48px] py-1 text-gray-400"
+              :class="{ '!text-primary': $store.router.isActive('admin-panel') }">
+        <span class="material-symbols-outlined text-[22px]" :class="{ 'filled': $store.router.isActive('admin-panel') }">settings</span>
+        <span class="text-[10px] mt-0.5">Ayar</span>
+      </button>
+
+      <button @click="$store.router.navigate('profile')"
+              class="flex flex-col items-center justify-center min-w-[48px] py-1 text-gray-400"
+              :class="{ '!text-primary': $store.router.isActive('profile') }">
+        <span class="material-symbols-outlined text-[22px]" :class="{ 'filled': $store.router.isActive('profile') }">person</span>
+        <span class="text-[10px] mt-0.5">Profil</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Location Picker Component for Household Form -->
+  <script>
+    // Debounce utility for API rate limiting
+    function debounce(func, wait) {
+      let timeout;
+      return function(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+      };
+    }
+
+    function locationPickerComponent() {
+      return {
+        map: null,
+        marker: null,
+        addressSearch: '',
+        searchResults: [],
+        searching: false,
+        gettingLocation: false,
+        searchController: null, // AbortController for cancelling requests
+        debouncedSearch: null,
+
+        // Configuration
+        defaultCenter: { lat: 40.8028, lng: 29.4307 }, // Gebze
+        defaultZoom: 13,
+        detailZoom: 16,
+
+        init() {
+          // Create debounced search function (1 second delay per Nominatim policy)
+          this.debouncedSearch = debounce(() => this.performSearch(), 1000);
+
+          // Watch for page changes to initialize/cleanup map
+          this.$watch('$store.router.currentPage', (value) => {
+            if (value === 'household-form') {
+              this.$nextTick(() => this.initMap());
+            } else {
+              this.destroyMap();
+            }
+          });
+
+          // Initialize if already on the form
+          if (Alpine.store('router').isActive('household-form')) {
+            this.$nextTick(() => this.initMap());
+          }
+        },
+
+        destroyMap() {
+          // Cancel any pending search
+          if (this.searchController) {
+            this.searchController.abort();
+            this.searchController = null;
+          }
+
+          if (this.map) {
+            this.map.remove();
+            this.map = null;
+            this.marker = null;
+          }
+        },
+
+        initMap() {
+          const container = document.getElementById('location-picker-map');
+          if (!container || this.map) return;
+
+          const form = Alpine.store('data').householdForm;
+          const hasCoords = form.latitude && form.longitude;
+          const centerLat = hasCoords ? parseFloat(form.latitude) : this.defaultCenter.lat;
+          const centerLng = hasCoords ? parseFloat(form.longitude) : this.defaultCenter.lng;
+          const zoom = hasCoords ? this.detailZoom : this.defaultZoom;
+
+          this.map = L.map('location-picker-map', {
+            zoomControl: true,
+            tap: false // Prevent scroll trap on mobile
+          }).setView([centerLat, centerLng], zoom);
+
+          // OpenStreetMap tiles
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OSM',
+            maxZoom: 19
+          }).addTo(this.map);
+
+          // Add existing marker if coordinates exist
+          if (hasCoords) {
+            this.marker = L.marker([centerLat, centerLng]).addTo(this.map);
+          }
+
+          // Map click event
+          this.map.on('click', (e) => {
+            this.setLocation(e.latlng.lat, e.latlng.lng);
+            this.reverseGeocode(e.latlng.lat, e.latlng.lng);
+          });
+
+          // Fix map size after DOM is ready
+          this.map.whenReady(() => {
+            this.map.invalidateSize();
+          });
+        },
+
+        setLocation(lat, lng) {
+          const form = Alpine.store('data').householdForm;
+          form.latitude = lat.toString();
+          form.longitude = lng.toString();
+
+          if (this.marker) {
+            this.marker.setLatLng([lat, lng]);
+          } else if (this.map) {
+            this.marker = L.marker([lat, lng]).addTo(this.map);
+          }
+
+          if (this.map) {
+            this.map.flyTo([lat, lng], this.detailZoom);
+          }
+        },
+
+        // Called on input - triggers debounced search
+        searchAddress() {
+          if (!this.addressSearch || this.addressSearch.length < 3) {
+            this.searchResults = [];
+            return;
+          }
+          this.searching = true;
+          this.debouncedSearch();
+        },
+
+        // Actual API call with AbortController for race condition prevention
+        async performSearch() {
+          // Cancel previous request if exists
+          if (this.searchController) {
+            this.searchController.abort();
+          }
+          this.searchController = new AbortController();
+
+          try {
+            // Add Gebze context to improve local results
+            const query = this.addressSearch.includes('Gebze')
+              ? this.addressSearch
+              : `${this.addressSearch}, Gebze, Kocaeli, Turkey`;
+
+            const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&countrycodes=tr`;
+
+            const response = await fetch(url, {
+              signal: this.searchController.signal,
+              headers: {
+                'Accept-Language': 'tr',
+                'User-Agent': 'IyilikKervaniApp/1.0 (iyilikkervani.org)'
+              }
+            });
+
+            this.searchResults = await response.json();
+          } catch (error) {
+            if (error.name === 'AbortError') return; // Ignore aborted requests
+            console.error('Address search failed:', error);
+            Alpine.store('ui').showToast('Adres araması başarısız', 'error');
+          } finally {
+            this.searching = false;
+          }
+        },
+
+        selectSearchResult(result) {
+          const lat = parseFloat(result.lat);
+          const lng = parseFloat(result.lon);
+
+          this.setLocation(lat, lng);
+
+          // Update address field with selected address
+          const form = Alpine.store('data').householdForm;
+          if (!form.address || form.address.trim() === '') {
+            form.address = result.display_name;
+          }
+
+          this.addressSearch = '';
+          this.searchResults = [];
+        },
+
+        async reverseGeocode(lat, lng) {
+          try {
+            const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=tr`;
+            const response = await fetch(url, {
+              headers: {
+                'User-Agent': 'IyilikKervaniApp/1.0 (iyilikkervani.org)'
+              }
+            });
+            const data = await response.json();
+
+            if (data.display_name) {
+              const form = Alpine.store('data').householdForm;
+              if (!form.address || form.address.trim() === '') {
+                form.address = data.display_name;
+              }
+            }
+          } catch (error) {
+            console.error('Reverse geocode failed:', error);
+          }
+        },
+
+        getCurrentLocation() {
+          if (!navigator.geolocation) {
+            Alpine.store('ui').showToast('Konum servisi desteklenmiyor', 'error');
+            return;
+          }
+
+          this.gettingLocation = true;
+
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              this.setLocation(position.coords.latitude, position.coords.longitude);
+              this.reverseGeocode(position.coords.latitude, position.coords.longitude);
+              this.gettingLocation = false;
+            },
+            (error) => {
+              console.error('Geolocation error:', error);
+              const messages = {
+                1: 'Konum izni reddedildi',
+                2: 'Konum bulunamadı',
+                3: 'Zaman aşımı'
+              };
+              Alpine.store('ui').showToast(messages[error.code] || 'Konum alınamadı', 'error');
+              this.gettingLocation = false;
+            },
+            {
+              enableHighAccuracy: true,
+              timeout: 10000,
+              maximumAge: 60000
+            }
+          );
+        },
+
+        clearLocation() {
+          const form = Alpine.store('data').householdForm;
+          form.latitude = '';
+          form.longitude = '';
+
+          if (this.marker && this.map) {
+            this.map.removeLayer(this.marker);
+            this.marker = null;
+          }
+
+          if (this.map) {
+            this.map.flyTo([this.defaultCenter.lat, this.defaultCenter.lng], this.defaultZoom);
+          }
+        }
+      };
+    }
+  </script>
+
+  <!-- Map Component -->
+  <script>
+    function mapComponent() {
+      return {
+        map: null,
+        markers: [],
+        markersData: [],
+        searchQuery: '',
+        activeFilter: 'all',
+        selectedMarkerHousehold: null,
+        visibleMarkersCount: 0,
+        userLocation: null,
+        userMarker: null,
+        nearbyRadiusKm: 5,
+        nearbyCount: 0,
+
+        init() {
+          this.$watch('$store.router.currentPage', (value) => {
+            if (value === 'map') {
+              this.onShow();
+            }
+          });
+
+          this.$watch('$store.data.households', () => {
+            if (this.map) {
+              this.loadMarkers();
+            }
+          });
+
+          if (Alpine.store('router').isActive('map')) {
+            this.onShow();
+          }
+        },
+
+        onShow() {
+          this.initMap();
+          this.$nextTick(() => {
+            if (this.map) {
+              this.map.invalidateSize();
+            }
+          });
+          if (this.map) {
+            this.loadMarkers();
+
+            // Check if we should focus on a specific household
+            this.focusTargetHousehold();
+          }
+        },
+
+        focusTargetHousehold() {
+          const target = Alpine.store('data').mapTargetHousehold;
+          if (!target) return;
+
+          // Get coordinates
+          let lat, lng;
+          if (target.location) {
+            lat = target.location.lat ?? target.location.latitude;
+            lng = target.location.lng ?? target.location.longitude;
+          } else if (target.latitude && target.longitude) {
+            lat = target.latitude;
+            lng = target.longitude;
+          }
+
+          if (lat && lng) {
+            // Fly to the target household
+            this.map.flyTo([Number(lat), Number(lng)], 17, {
+              duration: 1
+            });
+
+            // Show the household card
+            this.selectedMarkerHousehold = target;
+          }
+
+          // Clear the target after focusing
+          Alpine.store('data').mapTargetHousehold = null;
+        },
+
+        initMap() {
+          // Wait for element to be visible
+          this.$nextTick(() => {
+            if (this.map) return;
+
+            // Initialize map centered on Gebze
+            this.map = L.map('map', {
+              zoomControl: false
+            }).setView([40.8028, 29.4307], 13);
+
+            // CartoDB Dark Matter tiles - perfect for dark theme
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+              attribution: '&copy; OSM &copy; CARTO',
+              subdomains: 'abcd',
+              maxZoom: 19
+            }).addTo(this.map);
+
+            this.map.whenReady(() => {
+              setTimeout(() => {
+                this.map.invalidateSize();
+              }, 0);
+            });
+
+            // Add zoom control to bottom right
+            L.control.zoom({
+              position: 'bottomright'
+            }).addTo(this.map);
+
+            // Load markers from store
+            this.loadMarkers();
+
+            // Close card when clicking on map
+            this.map.on('click', () => {
+              this.selectedMarkerHousehold = null;
+            });
+          });
+        },
+
+        createCustomMarker(status, isUrgent) {
+          const colors = {
+            red: { bg: '#EF4444', border: '#DC2626', shadow: 'rgba(239, 68, 68, 0.5)' },
+            yellow: { bg: '#EAB308', border: '#CA8A04', shadow: 'rgba(234, 179, 8, 0.5)' },
+            green: { bg: '#22C55E', border: '#16A34A', shadow: 'rgba(34, 197, 94, 0.5)' }
+          };
+
+          const color = colors[status];
+          const pulseClass = isUrgent ? 'map-marker-pulse' : '';
+
+          return L.divIcon({
+            className: 'custom-marker',
+            html: `
+              <div class="marker-container ${pulseClass}">
+                <div class="marker-pin" style="background: ${color.bg}; border-color: ${color.border}; box-shadow: 0 2px 8px ${color.shadow};">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="16" height="16">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 4.17 4.42 9.92 6.24 12.11.4.48 1.13.48 1.53 0C14.58 18.92 19 13.17 19 9c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                  </svg>
+                </div>
+                ${isUrgent ? '<div class="marker-ring" style="border-color: ' + color.bg + ';"></div>' : ''}
+              </div>
+            `,
+            iconSize: [36, 42],
+            iconAnchor: [18, 42],
+            popupAnchor: [0, -42]
+          });
+        },
+
+        loadMarkers() {
+          if (!this.map) return;
+          const households = Alpine.store('data').households;
+
+          // Clear existing markers
+          this.markers.forEach(m => this.map.removeLayer(m));
+          this.markers = [];
+          this.markersData = [];
+
+          households.forEach(household => {
+            // Support both location object and direct lat/lng
+            let lat, lng;
+            if (household.location) {
+              lat = household.location.lat ?? household.location.latitude;
+              lng = household.location.lng ?? household.location.longitude;
+            } else if (household.latitude && household.longitude) {
+              lat = household.latitude;
+              lng = household.longitude;
+            }
+
+            const latValue = Number(lat);
+            const lngValue = Number(lng);
+            if (Number.isFinite(latValue) && Number.isFinite(lngValue)) {
+              const status = Alpine.store('data').getStatus(household.daysSinceAid, household.needLevel);
+              const isUrgent = status === 'red';
+              const customIcon = this.createCustomMarker(status, isUrgent);
+
+              const marker = L.marker([latValue, lngValue], { icon: customIcon }).addTo(this.map);
+
+              marker.on('click', (e) => {
+                L.DomEvent.stopPropagation(e);
+                this.selectedMarkerHousehold = household;
+              });
+
+              this.markers.push(marker);
+              this.markersData.push({
+                marker,
+                household,
+                status,
+                distanceKm: null,
+                lat: latValue,
+                lng: lngValue
+              });
+            }
+          });
+
+          this.updateDistances();
+          this.filterMarkers();
+        },
+
+        calculateDistanceKm(lat1, lon1, lat2, lon2) {
+          const toRad = (value) => (value * Math.PI) / 180;
+          const dLat = toRad(lat2 - lat1);
+          const dLon = toRad(lon2 - lon1);
+          const startLat = toRad(lat1);
+          const endLat = toRad(lat2);
+          const a = Math.sin(dLat / 2) ** 2 + Math.cos(startLat) * Math.cos(endLat) * Math.sin(dLon / 2) ** 2;
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+          return 6371 * c;
+        },
+
+        updateDistances() {
+          if (!this.userLocation) {
+            this.nearbyCount = 0;
+            this.markersData.forEach((item) => {
+              item.distanceKm = null;
+            });
+            return;
+          }
+
+          let count = 0;
+          this.markersData.forEach((item) => {
+            const latValue = Number(item.lat);
+            const lngValue = Number(item.lng);
+            if (Number.isFinite(latValue) && Number.isFinite(lngValue)) {
+              const distanceKm = this.calculateDistanceKm(
+                this.userLocation.lat,
+                this.userLocation.lng,
+                latValue,
+                lngValue
+              );
+              item.distanceKm = distanceKm;
+              if (distanceKm <= this.nearbyRadiusKm) {
+                count += 1;
+              }
+            } else {
+              item.distanceKm = null;
+            }
+          });
+
+          this.nearbyCount = count;
+        },
+
+        getDistanceForHousehold(householdId) {
+          const item = this.markersData.find((entry) => entry.household?.id === householdId);
+          return item?.distanceKm ?? null;
+        },
+
+        formatDistance(distanceKm) {
+          if (distanceKm === null || distanceKm === undefined) return 'Mesafe bilinmiyor';
+          if (distanceKm < 1) {
+            return `${Math.round(distanceKm * 1000)} m`;
+          }
+          return `${distanceKm.toFixed(1)} km`;
+        },
+
+        setFilter(filter) {
+          if (filter === 'nearby' && !this.userLocation) {
+            this.locateMe(true);
+            return;
+          }
+          this.activeFilter = filter;
+          this.filterMarkers();
+        },
+
+        filterMarkers() {
+          if (!this.map) return;
+          const searchLower = this.searchQuery.toLowerCase();
+          let visibleCount = 0;
+
+          this.markersData.forEach(({ marker, household, status, distanceKm }) => {
+            // Check filter
+            const matchesFilter = this.activeFilter === 'nearby'
+              ? Boolean(this.userLocation && distanceKm !== null && distanceKm <= this.nearbyRadiusKm)
+              : this.activeFilter === 'all' || status === this.activeFilter;
+
+            // Check search
+            const matchesSearch = !this.searchQuery ||
+              household.familyName?.toLowerCase().includes(searchLower) ||
+              household.name?.toLowerCase().includes(searchLower) ||
+              household.primaryPhone?.toLowerCase().includes(searchLower) ||
+              household.phone?.toLowerCase().includes(searchLower) ||
+              household.neighborhood?.toLowerCase().includes(searchLower) ||
+              household.address?.toLowerCase().includes(searchLower);
+
+            if (matchesFilter && matchesSearch) {
+              if (!this.map.hasLayer(marker)) {
+                marker.addTo(this.map);
+              }
+              visibleCount++;
+            } else {
+              if (this.map.hasLayer(marker)) {
+                this.map.removeLayer(marker);
+              }
+            }
+          });
+
+          this.visibleMarkersCount = visibleCount;
+        },
+
+        locateMe(autoFilter = false) {
+          if (navigator.geolocation) {
+            Alpine.store('ui').showLoading();
+            navigator.geolocation.getCurrentPosition(
+              (position) => {
+                const { latitude, longitude } = position.coords;
+                this.userLocation = { lat: latitude, lng: longitude };
+                if (this.map) {
+                  this.map.setView([latitude, longitude], 15);
+                }
+
+                // Add user location marker
+                const userIcon = L.divIcon({
+                  className: 'user-location-marker',
+                  html: `
+                    <div class="user-marker-container">
+                      <div class="user-marker-dot"></div>
+                      <div class="user-marker-pulse"></div>
+                    </div>
+                  `,
+                  iconSize: [24, 24],
+                  iconAnchor: [12, 12]
+                });
+
+                if (this.map) {
+                  if (this.userMarker) {
+                    this.map.removeLayer(this.userMarker);
+                  }
+                  this.userMarker = L.marker([latitude, longitude], { icon: userIcon }).addTo(this.map);
+                }
+
+                if (autoFilter) {
+                  this.activeFilter = 'nearby';
+                }
+                this.updateDistances();
+                this.filterMarkers();
+
+                Alpine.store('ui').hideLoading();
+                Alpine.store('ui').showToast('Konumunuz bulundu', 'success');
+              },
+              (error) => {
+                Alpine.store('ui').hideLoading();
+                Alpine.store('ui').showToast('Konum alınamadı', 'error');
+              },
+              { enableHighAccuracy: true }
+            );
+          } else {
+            Alpine.store('ui').showToast('Tarayıcınız konum desteklemiyor', 'error');
+          }
+        },
+
+        openNavigation() {
+          if (this.selectedMarkerHousehold) {
+            const h = this.selectedMarkerHousehold;
+            const lat = h.location?.lat || h.latitude;
+            const lng = h.location?.lng || h.longitude;
+            if (lat && lng) {
+              window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
+            }
+          }
+        },
+
+        callHousehold() {
+          const phone = this.selectedMarkerHousehold?.primaryPhone || this.selectedMarkerHousehold?.phone;
+          if (phone) {
+            window.location.href = `tel:${phone}`;
+          } else {
+            Alpine.store('ui').showToast('Telefon numarası bulunamadı', 'error');
+          }
+        },
+
+        viewHouseholdDetail() {
+          if (this.selectedMarkerHousehold) {
+            Alpine.store('data').selectHousehold(this.selectedMarkerHousehold.id);
+            Alpine.store('router').navigate('household-detail');
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Main JS -->
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>

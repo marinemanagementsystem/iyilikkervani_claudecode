@@ -1,0 +1,94 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function isVolunteer() {
+      return isSignedIn() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'volunteer';
+    }
+
+    function getUserRegion() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.assignedRegionId;
+    }
+
+    // ==========================================
+    // USERS COLLECTION
+    // ==========================================
+    // - Only admins can create/update/delete users
+    // - All authenticated users can read users
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ==========================================
+    // REGIONS COLLECTION
+    // ==========================================
+    // - Only admins can create/update/delete regions
+    // - All authenticated users can read regions
+    match /regions/{regionId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ==========================================
+    // HOUSEHOLDS COLLECTION
+    // ==========================================
+    // - Admins can read/write all households
+    // - Volunteers can only read/write households in their assigned region
+    match /households/{householdId} {
+      allow read: if isSignedIn() && (
+        isAdmin() ||
+        resource.data.regionId == getUserRegion()
+      );
+      allow create: if isSignedIn() && (
+        isAdmin() ||
+        request.resource.data.regionId == getUserRegion()
+      );
+      allow update, delete: if isSignedIn() && (
+        isAdmin() ||
+        resource.data.regionId == getUserRegion()
+      );
+    }
+
+    // ==========================================
+    // AID_TRANSACTIONS COLLECTION
+    // ==========================================
+    // - Admins can read/write all transactions
+    // - Volunteers can read/write transactions in their region
+    match /aid_transactions/{aidId} {
+      allow read: if isSignedIn() && (
+        isAdmin() ||
+        resource.data.regionId == getUserRegion()
+      );
+      allow create: if isSignedIn() && (
+        isAdmin() ||
+        request.resource.data.regionId == getUserRegion()
+      );
+      allow update, delete: if isSignedIn() && (
+        isAdmin() ||
+        resource.data.regionId == getUserRegion()
+      );
+    }
+
+    // ==========================================
+    // SYSTEM_SETTINGS COLLECTION
+    // ==========================================
+    // - Everyone can read (for version check)
+    // - Only admins can write
+    match /system_settings/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "appId": "com.iyilikkervani.yonetim",
+  "appName": "İyilik Yönetim",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "android": {
+    "allowMixedContent": true,
+    "captureInput": true
+  },
+  "plugins": {
+    "Camera": {
+      "quality": 80
+    }
+  }
+}
