@@ -444,6 +444,7 @@ Alpine.store('data', {
     mode: 'create',
     id: null,
     householdId: null,
+    regionId: '',
     type: '',
     amount: '',
     notes: '',
@@ -871,11 +872,13 @@ Alpine.store('data', {
 
   openAidForm(aid = null) {
     if (!this.selectedHousehold) return;
+    const authStore = Alpine.store('auth');
 
     this.aidForm = {
       mode: aid ? 'edit' : 'create',
       id: aid?.id || null,
       householdId: this.selectedHousehold.id,
+      regionId: aid?.regionId || this.selectedHousehold?.regionId || authStore.userData?.assignedRegionId || '',
       type: aid?.type || '',
       amount: aid?.amount || '',
       notes: aid?.notes || '',
@@ -954,6 +957,11 @@ Alpine.store('data', {
     const authStore = Alpine.store('auth');
     const form = this.aidForm;
 
+    if (!form.regionId) {
+      ui.showToast('Bölge seçmelisiniz', 'error');
+      return;
+    }
+
     if (!form.type) {
       ui.showToast('Yardım türü seçmelisiniz', 'error');
       return;
@@ -971,7 +979,7 @@ Alpine.store('data', {
       if (form.mode === 'create') {
         await addDoc(collection(db, 'aid_transactions'), {
           householdId: form.householdId,
-          regionId: this.selectedHousehold?.regionId || authStore.userData?.assignedRegionId || '',
+          regionId: form.regionId,
           volunteerId: authStore.user?.uid || '',
           volunteerName: authStore.userData?.name || authStore.userData?.username || 'Gönüllü',
           type: form.type,
@@ -990,6 +998,7 @@ Alpine.store('data', {
         ui.showToast('Yardım kaydedildi', 'success');
       } else {
         await updateDoc(doc(db, 'aid_transactions', form.id), {
+          regionId: form.regionId,
           type: form.type,
           amount: form.amount,
           notes: form.notes,

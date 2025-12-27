@@ -1507,6 +1507,27 @@
 
       <!-- Scrollable Content -->
       <div class="flex-1 overflow-y-auto overflow-x-hidden no-scrollbar pb-24">
+        <!-- Section: Region Selector -->
+        <div class="px-6 py-4">
+          <label class="flex flex-col gap-2">
+            <span class="text-gray-900 dark:text-white text-sm font-medium">Bölge</span>
+            <select x-model="$store.data.aidForm.regionId"
+                    class="w-full h-12 rounded-xl bg-white dark:bg-surface-dark border border-gray-300 dark:border-gray-700 focus:border-primary focus:ring-1 focus:ring-primary text-gray-900 dark:text-white px-4 text-sm transition-colors">
+              <option value="">Bölge seçin</option>
+              <template x-for="region in ($store.auth.isAdmin ? $store.data.regions : $store.data.regions.filter(r => r.id === $store.auth.userData?.assignedRegionId))" :key="region.id">
+                <option :value="region.id" x-text="region.name"></option>
+              </template>
+            </select>
+          </label>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-2" x-show="$store.data.selectedHousehold?.regionId">
+            Hane bölgesi: <span class="font-semibold" x-text="$store.data.getRegionName($store.data.selectedHousehold?.regionId)"></span>
+          </p>
+          <p class="text-xs text-amber-500 mt-1"
+             x-show="$store.data.selectedHousehold?.regionId && $store.data.aidForm.regionId && $store.data.aidForm.regionId !== $store.data.selectedHousehold?.regionId">
+            Seçilen bölge hanenin bölgesinden farklı.
+          </p>
+        </div>
+
         <!-- Section: Aid Type Selector -->
         <div class="flex flex-col pt-6 pb-2">
           <h3 class="text-gray-900 dark:text-white text-base font-semibold px-6 mb-3">Yardım Türü Seçin</h3>
