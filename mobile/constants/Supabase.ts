@@ -1,2 +1,0 @@
-export const SUPABASE_URL = 'https://wngrqzupzlkxaraxlrky.supabase.co'
-export const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InduZ3JxenVwemxreGFyYXhscmt5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY1MTYwMzAsImV4cCI6MjA4MjA5MjAzMH0.jDsg7o125ebG68tzz8tOHF8dlkXBXgmkN0B1md30k1c'
