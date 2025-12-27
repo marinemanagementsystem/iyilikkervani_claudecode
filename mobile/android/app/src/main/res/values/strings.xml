@@ -1,3 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
-  <string name="app_name">İyilik Kervanı</string>
+    <string name="app_name">İyilik Yönetim</string>
+    <string name="title_activity_main">İyilik Yönetim</string>
+    <string name="package_name">com.iyilikkervani.yonetim</string>
+    <string name="custom_url_scheme">com.iyilikkervani.yonetim</string>
 </resources>
