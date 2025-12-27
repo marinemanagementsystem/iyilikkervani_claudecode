@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Household List</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13a4ec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101c22",
+                        "card-dark": "#1c262c",
+                        "status-red": "#EF4444",
+                        "status-yellow": "#EAB308",
+                        "status-green": "#22C55E",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .hide-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+        /* Filled icon variation */
+        .material-symbols-outlined.fill-1 {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white font-display h-screen flex flex-col overflow-hidden antialiased selection:bg-primary selection:text-white">
+<!-- Top App Bar & Search -->
+<header class="flex-none px-4 pt-12 pb-4 bg-background-light dark:bg-background-dark z-10 sticky top-0">
+<!-- Title Row -->
+<div class="flex items-center justify-between mb-5">
+<h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Households</h1>
+<button class="flex items-center justify-center w-10 h-10 rounded-xl bg-primary text-white hover:bg-opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined text-2xl font-bold">add</span>
+</button>
+</div>
+<!-- Search Input -->
+<div class="relative group">
+<div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+<span class="material-symbols-outlined text-[22px]">search</span>
+</div>
+<input class="block w-full rounded-xl border-none bg-white dark:bg-card-dark py-3.5 pl-11 pr-4 text-[15px] text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-primary/50 shadow-sm transition-all" placeholder="Search by Name or Phone" type="text"/>
+</div>
+</header>
+<!-- Filter Pills -->
+<div class="flex-none px-4 py-1 pb-4 overflow-x-auto hide-scrollbar flex gap-2.5 items-center">
+<!-- Active Filter -->
+<button class="flex-none px-4 py-2 rounded-lg bg-primary text-white text-[13px] font-semibold tracking-wide shadow-md shadow-primary/20 transition-all">
+            All
+        </button>
+<!-- Red Filter -->
+<button class="group flex-none px-4 py-2 rounded-lg bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700/50 text-[13px] font-medium text-slate-600 dark:text-slate-300 hover:border-status-red hover:text-status-red dark:hover:border-status-red transition-all whitespace-nowrap flex items-center gap-1.5 active:bg-status-red/5">
+<span class="w-2 h-2 rounded-full bg-status-red shadow-[0_0_6px_rgba(239,68,68,0.6)]"></span>
+            Urgent
+        </button>
+<!-- Yellow Filter -->
+<button class="group flex-none px-4 py-2 rounded-lg bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700/50 text-[13px] font-medium text-slate-600 dark:text-slate-300 hover:border-status-yellow hover:text-status-yellow dark:hover:border-status-yellow transition-all whitespace-nowrap flex items-center gap-1.5 active:bg-status-yellow/5">
+<span class="w-2 h-2 rounded-full bg-status-yellow shadow-[0_0_6px_rgba(234,179,8,0.6)]"></span>
+            Waitlist
+        </button>
+<!-- Green Filter -->
+<button class="group flex-none px-4 py-2 rounded-lg bg-white dark:bg-card-dark border border-slate-200 dark:border-slate-700/50 text-[13px] font-medium text-slate-600 dark:text-slate-300 hover:border-status-green hover:text-status-green dark:hover:border-status-green transition-all whitespace-nowrap flex items-center gap-1.5 active:bg-status-green/5">
+<span class="w-2 h-2 rounded-full bg-status-green shadow-[0_0_6px_rgba(34,197,94,0.6)]"></span>
+            Served
+        </button>
+</div>
+<!-- Scrollable Content List -->
+<main class="flex-1 overflow-y-auto px-4 space-y-3 pb-24 hide-scrollbar">
+<!-- List Item: Red/Urgent -->
+<div class="group relative overflow-hidden rounded-xl bg-white dark:bg-card-dark shadow-sm border border-slate-100 dark:border-slate-800/60 active:scale-[0.99] transition-transform duration-100 touch-manipulation">
+<!-- Left Color Strip -->
+<div class="absolute left-0 top-0 bottom-0 w-[5px] bg-status-red"></div>
+<div class="p-4 pl-5 flex items-center justify-between">
+<div class="flex-1 min-w-0 pr-4">
+<div class="flex items-center gap-2 mb-1.5">
+<h3 class="text-[16px] font-bold text-slate-900 dark:text-white truncate leading-tight">Fatima Al-Sayed</h3>
+<!-- Status Badge for Accessibility -->
+<span class="inline-flex items-center rounded-md bg-status-red/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-status-red border border-status-red/20">Urgent</span>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex items-center text-[13px] text-slate-500 dark:text-slate-400">
+<span class="material-symbols-outlined text-[16px] mr-1.5 opacity-70">phone</span>
+<span class="font-medium">+961 70 123456</span>
+</div>
+<div class="flex items-center text-[13px] text-slate-500 dark:text-slate-400">
+<span class="material-symbols-outlined text-[16px] mr-1.5 opacity-70">groups</span>
+<span>Family of 6</span>
+</div>
+</div>
+<p class="text-[12px] text-status-red font-semibold mt-2 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">history</span>
+                        Last Aid: Never
+                    </p>
+</div>
+<div class="flex-shrink-0 text-slate-300 dark:text-slate-600">
+<span class="material-symbols-outlined">chevron_right</span>
+</div>
+</div>
+</div>
+<!-- List Item: Yellow/Waitlist -->
+<div class="group relative overflow-hidden rounded-xl bg-white dark:bg-card-dark shadow-sm border border-slate-100 dark:border-slate-800/60 active:scale-[0.99] transition-transform duration-100 touch-manipulation">
+<div class="absolute left-0 top-0 bottom-0 w-[5px] bg-status-yellow"></div>
+<div class="p-4 pl-5 flex items-center justify-between">
+<div class="flex-1 min-w-0 pr-4">
+<div class="flex items-center gap-2 mb-1.5">
+<h3 class="text-[16px] font-bold text-slate-900 dark:text-white truncate leading-tight">John Doe</h3>
+<span class="inline-flex items-center rounded-md bg-status-yellow/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-status-yellow border border-status-yellow/20">Review</span>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex items-center text-[13px] text-slate-500 dark:text-slate-400">
+<span class="material-symbols-outlined text-[16px] mr-1.5 opacity-70">phone</span>
+<span class="font-medium">+961 03 987654</span>
+</div>
+<div class="flex items-center text-[13px] text-slate-500 dark:text-slate-400">
+<span class="material-symbols-outlined text-[16px] mr-1.5 opacity-70">groups</span>
+<span>Family of 3</span>
+</div>
+</div>
+<p class="text-[12px] text-slate-500 dark:text-slate-400 font-medium mt-2 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">history</span>
+                        Last Aid: 45 days ago
+                    </p>
+</div>
+<div class="flex-shrink-0 text-slate-300 dark:text-slate-600">
+<span class="material-symbols-outlined">chevron_right</span>
+</div>
+</div>
+</div>
+<!-- List Item: Green/Served -->
+<div class="group relative overflow-hidden rounded-xl bg-white dark:bg-card-dark shadow-sm border border-slate-100 dark:border-slate-800/60 active:scale-[0.99] transition-transform duration-100 touch-manipulation">
+<div class="absolute left-0 top-0 bottom-0 w-[5px] bg-status-green"></div>
+<div class="p-4 pl-5 flex items-center justify-between">
+<div class="flex-1 min-w-0 pr-4">
+<div class="flex items-center gap-2 mb-1.5">
+<h3 class="text-[16px] font-bold text-slate-900 dark:text-white truncate leading-tight">Maria Rodriguez</h3>
+<span class="inline-flex items-center rounded-md bg-status-green/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-status-green border border-status-green/20">Served</span>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex items-center text-[13px] text-slate-500 dark:text-slate-400">
+<span class="material-symbols-outlined text-[16px] mr-1.5 opacity-70">phone</span>
+<span class="font-medium">+961 71 555000</span>
+</div>
+<div class="flex items-center text-[13px] text-slate-500 dark:text-slate-400">
+<span class="material-symbols-outlined text-[16px] mr-1.5 opacity-70">groups</span>
+<span>Family of 4</span>
+</div>
+</div>
+<p class="text-[12px] text-status-green font-medium mt-2 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+                        Last Aid: 2 days ago
+                    </p>
+</div>
+<div class="flex-shrink-0 text-slate-300 dark:text-slate-600">
+<span class="material-symbols-outlined">chevron_right</span>
+</div>
+</div>
+</div>
+<!-- List Item: Red/Urgent (More Data) -->
+<div class="group relative overflow-hidden rounded-xl bg-white dark:bg-card-dark shadow-sm border border-slate-100 dark:border-slate-800/60 active:scale-[0.99] transition-transform duration-100 touch-manipulation">
+<div class="absolute left-0 top-0 bottom-0 w-[5px] bg-status-red"></div>
+<div class="p-4 pl-5 flex items-center justify-between">
+<div class="flex-1 min-w-0 pr-4">
+<div class="flex items-center gap-2 mb-1.5">
+<h3 class="text-[16px] font-bold text-slate-900 dark:text-white truncate leading-tight">Ahmed Khalil</h3>
+<span class="inline-flex items-center rounded-md bg-status-red/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-status-red border border-status-red/20">Urgent</span>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex items-center text-[13px] text-slate-500 dark:text-slate-400">
+<span class="material-symbols-outlined text-[16px] mr-1.5 opacity-70">phone</span>
+<span class="font-medium">+961 76 111222</span>
+</div>
+<div class="flex items-center text-[13px] text-slate-500 dark:text-slate-400">
+<span class="material-symbols-outlined text-[16px] mr-1.5 opacity-70">groups</span>
+<span>Family of 8</span>
+</div>
+</div>
+<p class="text-[12px] text-status-red font-semibold mt-2 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">history</span>
+                        Last Aid: 6 months ago
+                    </p>
+</div>
+<div class="flex-shrink-0 text-slate-300 dark:text-slate-600">
+<span class="material-symbols-outlined">chevron_right</span>
+</div>
+</div>
+</div>
+<!-- List Item: Yellow/Waitlist (More Data) -->
+<div class="group relative overflow-hidden rounded-xl bg-white dark:bg-card-dark shadow-sm border border-slate-100 dark:border-slate-800/60 active:scale-[0.99] transition-transform duration-100 touch-manipulation">
+<div class="absolute left-0 top-0 bottom-0 w-[5px] bg-status-yellow"></div>
+<div class="p-4 pl-5 flex items-center justify-between">
+<div class="flex-1 min-w-0 pr-4">
+<div class="flex items-center gap-2 mb-1.5">
+<h3 class="text-[16px] font-bold text-slate-900 dark:text-white truncate leading-tight">Layla Mourad</h3>
+<span class="inline-flex items-center rounded-md bg-status-yellow/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-status-yellow border border-status-yellow/20">Waitlist</span>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex items-center text-[13px] text-slate-500 dark:text-slate-400">
+<span class="material-symbols-outlined text-[16px] mr-1.5 opacity-70">phone</span>
+<span class="font-medium">+961 03 555999</span>
+</div>
+<div class="flex items-center text-[13px] text-slate-500 dark:text-slate-400">
+<span class="material-symbols-outlined text-[16px] mr-1.5 opacity-70">groups</span>
+<span>Family of 2</span>
+</div>
+</div>
+<p class="text-[12px] text-slate-500 dark:text-slate-400 font-medium mt-2 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">history</span>
+                        Last Aid: 32 days ago
+                    </p>
+</div>
+<div class="flex-shrink-0 text-slate-300 dark:text-slate-600">
+<span class="material-symbols-outlined">chevron_right</span>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation -->
+<nav class="flex-none bg-white dark:bg-card-dark border-t border-slate-200 dark:border-slate-800 pb-safe pt-2 px-6 flex justify-between items-center z-20 h-[80px]">
+<button class="flex flex-col items-center gap-1.5 text-primary w-16">
+<span class="material-symbols-outlined fill-1 text-[26px]">format_list_bulleted</span>
+<span class="text-[11px] font-semibold">List</span>
+</button>
+<button class="flex flex-col items-center gap-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors w-16">
+<span class="material-symbols-outlined text-[26px]">map</span>
+<span class="text-[11px] font-medium">Map</span>
+</button>
+<button class="flex flex-col items-center gap-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors w-16">
+<span class="material-symbols-outlined text-[26px]">bar_chart</span>
+<span class="text-[11px] font-medium">Stats</span>
+</button>
+<button class="flex flex-col items-center gap-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors w-16">
+<span class="material-symbols-outlined text-[26px]">person</span>
+<span class="text-[11px] font-medium">Profile</span>
+</button>
+</nav>
+</body></html>

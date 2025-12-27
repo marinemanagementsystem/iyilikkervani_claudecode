@@ -1,0 +1,630 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Firebase Seed Script</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 900px; margin: 50px auto; padding: 20px; background: #0f172a; color: #e2e8f0; }
+    h1 { color: #38bdf8; }
+    button { background: #38bdf8; color: #0f172a; border: none; padding: 14px 24px; font-size: 14px; cursor: pointer; border-radius: 10px; margin: 8px 6px 0 0; font-weight: 600; }
+    button:hover { background: #0ea5e9; color: #fff; }
+    button:disabled { background: #475569; cursor: not-allowed; color: #cbd5f5; }
+    .log { background: #0b1220; padding: 16px; border-radius: 12px; margin-top: 20px; max-height: 420px; overflow-y: auto; }
+    .log p { margin: 6px 0; font-family: Consolas, monospace; font-size: 13px; }
+    .success { color: #22c55e; }
+    .error { color: #f87171; }
+    .info { color: #38bdf8; }
+    .note { color: #94a3b8; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <h1>🌱 İyilik Kervanı - Firebase Seed</h1>
+  <p class="note">Bu sayfa Firestore'a örnek veriler ekler. Auth kullanıcıları için <strong>Admin Panel</strong> üzerinden kullanıcı oluşturabilirsiniz.</p>
+
+  <div>
+    <button onclick="seedSystemSettings()">1. Sistem Ayarları</button>
+    <button onclick="seedRegions()">2. Bölgeler</button>
+    <button onclick="seedUsers()">3. Kullanıcılar</button>
+    <button onclick="seedHouseholds()">4. Haneler</button>
+    <button onclick="seedAidTransactions()">5. Yardımlar</button>
+    <button onclick="seedAll()">🚀 Tümünü Ekle</button>
+    <button onclick="clearLog()">🧹 Log Temizle</button>
+  </div>
+
+  <div class="log" id="log">
+    <p class="info">Hazır. Bir butona tıklayın...</p>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import {
+      getFirestore,
+      doc,
+      setDoc,
+      updateDoc,
+      collection,
+      addDoc,
+      getDoc,
+      getDocs,
+      query,
+      where,
+      Timestamp
+    } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    import {
+      getAuth,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      signOut
+    } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA1kSE0St1cyTOyZlFycWgp2hkKO4Bwvl8",
+      authDomain: "iyilikkernanimobile.firebaseapp.com",
+      projectId: "iyilikkernanimobile",
+      storageBucket: "iyilikkernanimobile.firebasestorage.app",
+      messagingSenderId: "34126359922",
+      appId: "1:34126359922:web:2cd44501f6456628ebc1eb"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    const logEl = document.getElementById('log');
+    const regionMap = {};
+    const userMap = {};
+    const householdMap = {};
+
+    function log(msg, type = 'info') {
+      const p = document.createElement('p');
+      p.className = type;
+      p.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+      logEl.appendChild(p);
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    window.clearLog = () => {
+      logEl.innerHTML = '<p class="info">Log temizlendi.</p>';
+    };
+
+    const normalizePhone = (value) => (value || '').toString().replace(/[^\d+]/g, '').trim();
+
+    // Gebze Mahalleleri
+    const gebzeMahalleleri = [
+      'Sultan Orhan Mah.', 'Adem Yavuz Mah.', 'Atatürk Mah.', 'Barış Mah.',
+      'Beylikbağı Mah.', 'Cumhuriyet Mah.', 'Güzeller Mah.', 'Hisar Mah.',
+      'İnönü Mah.', 'Köşklüçeşme Mah.', 'Mevlana Mah.', 'Muallimköy Mah.',
+      'Osman Yılmaz Mah.', 'Pelitli Mah.', 'Sultaniye Mah.', 'Yeni Mah.',
+      'Yıldırım Beyazıt Mah.', 'Eskihisar Mah.', 'Tavşanlı Mah.', 'Mollafenari Mah.'
+    ];
+
+    // Darıca Mahalleleri
+    const daricaMahalleleri = [
+      'Abdi İpekçi Mah.', 'Bağlarbaşı Mah.', 'Bayramoğlu Mah.', 'Cami Mah.',
+      'Emek Mah.', 'Nene Hatun Mah.', 'Osmangazi Mah.', 'Fevzi Çakmak Mah.',
+      'Piri Reis Mah.', 'Sırasöğütler Mah.', 'Kazım Karabekir Mah.'
+    ];
+
+    // Tüm bölgeler (mahalle bazlı)
+    const regions = [
+      // Gebze Mahalleleri
+      ...gebzeMahalleleri.map(m => ({ name: m, city: 'Kocaeli', district: 'Gebze' })),
+      // Darıca Mahalleleri
+      ...daricaMahalleleri.map(m => ({ name: m, city: 'Kocaeli', district: 'Darıca' })),
+      // Diğer ilçeler
+      { name: 'Çayırova Merkez', city: 'Kocaeli', district: 'Çayırova' },
+      { name: 'Dilovası Merkez', city: 'Kocaeli', district: 'Dilovası' }
+    ];
+
+    const users = [
+      // Admin
+      { username: 'admin', password: 'admin123', name: 'Admin Yönetici', role: 'admin', assignedRegionName: null },
+
+      // Sultan Orhan Mah. (Gebze) - 2 kullanıcı
+      { username: 'mehmet.sultanorhan', password: 'gonullu123', name: 'Mehmet Yıldız', role: 'volunteer', assignedRegionName: 'Sultan Orhan Mah.' },
+      { username: 'ayse.sultanorhan', password: 'gonullu123', name: 'Ayşe Kara', role: 'volunteer', assignedRegionName: 'Sultan Orhan Mah.' },
+
+      // Adem Yavuz Mah. (Gebze) - 2 kullanıcı
+      { username: 'ali.ademyavuz', password: 'gonullu123', name: 'Ali Demir', role: 'volunteer', assignedRegionName: 'Adem Yavuz Mah.' },
+      { username: 'fatma.ademyavuz', password: 'gonullu123', name: 'Fatma Öz', role: 'volunteer', assignedRegionName: 'Adem Yavuz Mah.' },
+
+      // Atatürk Mah. (Gebze) - 2 kullanıcı
+      { username: 'hasan.ataturk', password: 'gonullu123', name: 'Hasan Çelik', role: 'volunteer', assignedRegionName: 'Atatürk Mah.' },
+      { username: 'zeynep.ataturk', password: 'gonullu123', name: 'Zeynep Ak', role: 'volunteer', assignedRegionName: 'Atatürk Mah.' },
+
+      // Cumhuriyet Mah. (Gebze) - 2 kullanıcı
+      { username: 'mustafa.cumhuriyet', password: 'gonullu123', name: 'Mustafa Koç', role: 'volunteer', assignedRegionName: 'Cumhuriyet Mah.' },
+      { username: 'elif.cumhuriyet', password: 'gonullu123', name: 'Elif Yılmaz', role: 'volunteer', assignedRegionName: 'Cumhuriyet Mah.' },
+
+      // Güzeller Mah. (Gebze) - 2 kullanıcı
+      { username: 'ahmet.guzeller', password: 'gonullu123', name: 'Ahmet Gönüllü', role: 'volunteer', assignedRegionName: 'Güzeller Mah.' },
+      { username: 'seda.guzeller', password: 'gonullu123', name: 'Seda Can', role: 'volunteer', assignedRegionName: 'Güzeller Mah.' },
+
+      // Mevlana Mah. (Gebze) - 2 kullanıcı
+      { username: 'kemal.mevlana', password: 'gonullu123', name: 'Kemal Aslan', role: 'volunteer', assignedRegionName: 'Mevlana Mah.' },
+      { username: 'hatice.mevlana', password: 'gonullu123', name: 'Hatice Bulut', role: 'volunteer', assignedRegionName: 'Mevlana Mah.' },
+
+      // Bağlarbaşı Mah. (Darıca) - 2 kullanıcı
+      { username: 'osman.baglarbasi', password: 'gonullu123', name: 'Osman Kaya', role: 'volunteer', assignedRegionName: 'Bağlarbaşı Mah.' },
+      { username: 'merve.baglarbasi', password: 'gonullu123', name: 'Merve Şen', role: 'volunteer', assignedRegionName: 'Bağlarbaşı Mah.' },
+
+      // Bayramoğlu Mah. (Darıca) - 2 kullanıcı
+      { username: 'ibrahim.bayramoglu', password: 'gonullu123', name: 'İbrahim Tekin', role: 'volunteer', assignedRegionName: 'Bayramoğlu Mah.' },
+      { username: 'derya.bayramoglu', password: 'gonullu123', name: 'Derya Güneş', role: 'volunteer', assignedRegionName: 'Bayramoğlu Mah.' },
+
+      // Emek Mah. (Darıca) - 2 kullanıcı
+      { username: 'fatma.emek', password: 'gonullu123', name: 'Fatma Gönüllü', role: 'volunteer', assignedRegionName: 'Emek Mah.' },
+      { username: 'burak.emek', password: 'gonullu123', name: 'Burak Yıldırım', role: 'volunteer', assignedRegionName: 'Emek Mah.' },
+
+      // Osmangazi Mah. (Darıca) - 2 kullanıcı
+      { username: 'cemil.osmangazi', password: 'gonullu123', name: 'Cemil Aydın', role: 'volunteer', assignedRegionName: 'Osmangazi Mah.' },
+      { username: 'nurgul.osmangazi', password: 'gonullu123', name: 'Nurgül Erdoğan', role: 'volunteer', assignedRegionName: 'Osmangazi Mah.' },
+
+      // Fevzi Çakmak Mah. (Darıca) - 2 kullanıcı
+      { username: 'serkan.fevzi', password: 'gonullu123', name: 'Serkan Özdemir', role: 'volunteer', assignedRegionName: 'Fevzi Çakmak Mah.' },
+      { username: 'gulsen.fevzi', password: 'gonullu123', name: 'Gülşen Arslan', role: 'volunteer', assignedRegionName: 'Fevzi Çakmak Mah.' }
+    ];
+
+    const households = [
+      // ===== GEBZE HANELERİ =====
+      // Sultan Orhan Mah.
+      {
+        familyName: 'Yılmaz Ailesi',
+        regionName: 'Sultan Orhan Mah.',
+        primaryPhone: '0532 123 45 67',
+        address: 'Sultan Orhan Mah. Yavuz Selim Cad. No:15/3, Gebze/Kocaeli',
+        needLevel: 5,
+        status: 'active',
+        members: [
+          { name: 'Mehmet Yılmaz', age: 42, gender: 'erkek', type: 'parent' },
+          { name: 'Ayşe Yılmaz', age: 39, gender: 'kadın', type: 'parent' },
+          { name: 'Zeynep Yılmaz', age: 11, gender: 'kadın', type: 'child' }
+        ],
+        lastAidDate: Timestamp.fromDate(new Date(Date.now() - 95 * 24 * 60 * 60 * 1000))
+      },
+      {
+        familyName: 'Arslan Ailesi',
+        regionName: 'Sultan Orhan Mah.',
+        primaryPhone: '0535 111 22 33',
+        address: 'Sultan Orhan Mah. Fatih Sok. No:8 D:2, Gebze/Kocaeli',
+        needLevel: 4,
+        status: 'active',
+        members: [
+          { name: 'Kemal Arslan', age: 55, gender: 'erkek', type: 'parent' },
+          { name: 'Hatice Arslan', age: 52, gender: 'kadın', type: 'parent' }
+        ],
+        lastAidDate: Timestamp.fromDate(new Date(Date.now() - 60 * 24 * 60 * 60 * 1000))
+      },
+
+      // Adem Yavuz Mah.
+      {
+        familyName: 'Öztürk Ailesi',
+        regionName: 'Adem Yavuz Mah.',
+        primaryPhone: '0536 222 33 44',
+        address: 'Adem Yavuz Mah. 123. Sok. No:5/1, Gebze/Kocaeli',
+        needLevel: 5,
+        status: 'active',
+        members: [
+          { name: 'Süleyman Öztürk', age: 38, gender: 'erkek', type: 'parent' },
+          { name: 'Merve Öztürk', age: 35, gender: 'kadın', type: 'parent' },
+          { name: 'Enes Öztürk', age: 8, gender: 'erkek', type: 'child' },
+          { name: 'Ela Öztürk', age: 5, gender: 'kadın', type: 'child' }
+        ],
+        lastAidDate: Timestamp.fromDate(new Date(Date.now() - 100 * 24 * 60 * 60 * 1000))
+      },
+      {
+        familyName: 'Çelik Ailesi',
+        regionName: 'Adem Yavuz Mah.',
+        primaryPhone: '0537 333 44 55',
+        address: 'Adem Yavuz Mah. Atatürk Blv. No:42, Gebze/Kocaeli',
+        needLevel: 3,
+        status: 'active',
+        members: [
+          { name: 'Fatih Çelik', age: 45, gender: 'erkek', type: 'parent' },
+          { name: 'Nurcan Çelik', age: 42, gender: 'kadın', type: 'parent' },
+          { name: 'Burak Çelik', age: 17, gender: 'erkek', type: 'child' }
+        ],
+        lastAidDate: Timestamp.fromDate(new Date(Date.now() - 20 * 24 * 60 * 60 * 1000))
+      },
+
+      // Atatürk Mah.
+      {
+        familyName: 'Koç Ailesi',
+        regionName: 'Atatürk Mah.',
+        primaryPhone: '0538 444 55 66',
+        address: 'Atatürk Mah. İnönü Cad. No:78 D:4, Gebze/Kocaeli',
+        needLevel: 4,
+        status: 'active',
+        members: [
+          { name: 'Oğuz Koç', age: 50, gender: 'erkek', type: 'parent' },
+          { name: 'Sevgi Koç', age: 48, gender: 'kadın', type: 'parent' }
+        ],
+        lastAidDate: Timestamp.fromDate(new Date(Date.now() - 55 * 24 * 60 * 60 * 1000))
+      },
+
+      // Güzeller Mah.
+      {
+        familyName: 'Şahin Ailesi',
+        regionName: 'Güzeller Mah.',
+        primaryPhone: '0539 555 66 77',
+        address: 'Güzeller Mah. Cumhuriyet Sok. No:12, Gebze/Kocaeli',
+        needLevel: 5,
+        status: 'active',
+        members: [
+          { name: 'Emre Şahin', age: 32, gender: 'erkek', type: 'parent' },
+          { name: 'Selin Şahin', age: 29, gender: 'kadın', type: 'parent' },
+          { name: 'Defne Şahin', age: 3, gender: 'kadın', type: 'child' }
+        ],
+        lastAidDate: Timestamp.fromDate(new Date(Date.now() - 92 * 24 * 60 * 60 * 1000))
+      },
+      {
+        familyName: 'Aydın Ailesi',
+        regionName: 'Güzeller Mah.',
+        primaryPhone: '0530 666 77 88',
+        address: 'Güzeller Mah. Barış Cad. No:25/5, Gebze/Kocaeli',
+        needLevel: 2,
+        status: 'active',
+        members: [
+          { name: 'Yusuf Aydın', age: 65, gender: 'erkek', type: 'parent' }
+        ],
+        lastAidDate: Timestamp.fromDate(new Date(Date.now() - 10 * 24 * 60 * 60 * 1000))
+      },
+
+      // Mevlana Mah.
+      {
+        familyName: 'Kara Ailesi',
+        regionName: 'Mevlana Mah.',
+        primaryPhone: '0531 777 88 99',
+        address: 'Mevlana Mah. Mevlana Cad. No:18 D:1, Gebze/Kocaeli',
+        needLevel: 4,
+        status: 'active',
+        members: [
+          { name: 'İsmail Kara', age: 40, gender: 'erkek', type: 'parent' },
+          { name: 'Zehra Kara', age: 38, gender: 'kadın', type: 'parent' },
+          { name: 'Yağmur Kara', age: 12, gender: 'kadın', type: 'child' },
+          { name: 'Yıldız Kara', age: 10, gender: 'kadın', type: 'child' }
+        ],
+        lastAidDate: Timestamp.fromDate(new Date(Date.now() - 50 * 24 * 60 * 60 * 1000))
+      },
+
+      // ===== DARICA HANELERİ =====
+      // Bağlarbaşı Mah.
+      {
+        familyName: 'Kaya Ailesi',
+        regionName: 'Bağlarbaşı Mah.',
+        primaryPhone: '0533 234 56 78',
+        address: 'Bağlarbaşı Mah. Bağdat Cad. No:45 D:3, Darıca/Kocaeli',
+        needLevel: 4,
+        status: 'active',
+        members: [
+          { name: 'Nazan Kaya', age: 37, gender: 'kadın', type: 'parent' },
+          { name: 'Ali Kaya', age: 9, gender: 'erkek', type: 'child' }
+        ],
+        lastAidDate: Timestamp.fromDate(new Date(Date.now() - 45 * 24 * 60 * 60 * 1000))
+      },
+      {
+        familyName: 'Doğan Ailesi',
+        regionName: 'Bağlarbaşı Mah.',
+        primaryPhone: '0532 888 99 00',
+        address: 'Bağlarbaşı Mah. Çiçek Sok. No:7, Darıca/Kocaeli',
+        needLevel: 5,
+        status: 'active',
+        members: [
+          { name: 'Recep Doğan', age: 58, gender: 'erkek', type: 'parent' },
+          { name: 'Gülşen Doğan', age: 55, gender: 'kadın', type: 'parent' }
+        ],
+        lastAidDate: Timestamp.fromDate(new Date(Date.now() - 105 * 24 * 60 * 60 * 1000))
+      },
+
+      // Bayramoğlu Mah.
+      {
+        familyName: 'Yıldırım Ailesi',
+        regionName: 'Bayramoğlu Mah.',
+        primaryPhone: '0534 999 00 11',
+        address: 'Bayramoğlu Mah. Sahil Yolu Cad. No:156, Darıca/Kocaeli',
+        needLevel: 3,
+        status: 'active',
+        members: [
+          { name: 'Serdar Yıldırım', age: 44, gender: 'erkek', type: 'parent' },
+          { name: 'Sibel Yıldırım', age: 41, gender: 'kadın', type: 'parent' },
+          { name: 'Can Yıldırım', age: 14, gender: 'erkek', type: 'child' }
+        ],
+        lastAidDate: Timestamp.fromDate(new Date(Date.now() - 25 * 24 * 60 * 60 * 1000))
+      },
+
+      // Emek Mah.
+      {
+        familyName: 'Özkan Ailesi',
+        regionName: 'Emek Mah.',
+        primaryPhone: '0535 000 11 22',
+        address: 'Emek Mah. Emek Sok. No:22 D:8, Darıca/Kocaeli',
+        needLevel: 5,
+        status: 'active',
+        members: [
+          { name: 'Murat Özkan', age: 36, gender: 'erkek', type: 'parent' },
+          { name: 'Ebru Özkan', age: 33, gender: 'kadın', type: 'parent' },
+          { name: 'Arda Özkan', age: 6, gender: 'erkek', type: 'child' },
+          { name: 'Asya Özkan', age: 4, gender: 'kadın', type: 'child' }
+        ],
+        lastAidDate: Timestamp.fromDate(new Date(Date.now() - 88 * 24 * 60 * 60 * 1000))
+      },
+      {
+        familyName: 'Tan Ailesi',
+        regionName: 'Emek Mah.',
+        primaryPhone: '0536 111 22 33',
+        address: 'Emek Mah. Güneş Cad. No:9, Darıca/Kocaeli',
+        needLevel: 4,
+        status: 'active',
+        members: [
+          { name: 'Hüseyin Tan', age: 62, gender: 'erkek', type: 'parent' }
+        ],
+        lastAidDate: Timestamp.fromDate(new Date(Date.now() - 40 * 24 * 60 * 60 * 1000))
+      },
+
+      // Osmangazi Mah.
+      {
+        familyName: 'Güneş Ailesi',
+        regionName: 'Osmangazi Mah.',
+        primaryPhone: '0537 222 33 44',
+        address: 'Osmangazi Mah. Fatih Sultan Mehmet Cad. No:88, Darıca/Kocaeli',
+        needLevel: 3,
+        status: 'active',
+        members: [
+          { name: 'Tuncay Güneş', age: 47, gender: 'erkek', type: 'parent' },
+          { name: 'Filiz Güneş', age: 45, gender: 'kadın', type: 'parent' },
+          { name: 'Deniz Güneş', age: 19, gender: 'erkek', type: 'child' }
+        ],
+        lastAidDate: Timestamp.fromDate(new Date(Date.now() - 18 * 24 * 60 * 60 * 1000))
+      },
+
+      // Fevzi Çakmak Mah.
+      {
+        familyName: 'Demir Ailesi',
+        regionName: 'Fevzi Çakmak Mah.',
+        primaryPhone: '0534 345 67 89',
+        address: 'Fevzi Çakmak Mah. Atatürk Cad. No:78 D:2, Darıca/Kocaeli',
+        needLevel: 3,
+        status: 'active',
+        members: [
+          { name: 'Hasan Demir', age: 48, gender: 'erkek', type: 'parent' },
+          { name: 'Elif Demir', age: 44, gender: 'kadın', type: 'parent' },
+          { name: 'Sude Demir', age: 15, gender: 'kadın', type: 'child' }
+        ],
+        lastAidDate: Timestamp.fromDate(new Date(Date.now() - 15 * 24 * 60 * 60 * 1000))
+      },
+      {
+        familyName: 'Eren Ailesi',
+        regionName: 'Fevzi Çakmak Mah.',
+        primaryPhone: '0538 333 44 55',
+        address: 'Fevzi Çakmak Mah. Şehitler Sok. No:31, Darıca/Kocaeli',
+        needLevel: 5,
+        status: 'active',
+        members: [
+          { name: 'Cengiz Eren', age: 52, gender: 'erkek', type: 'parent' },
+          { name: 'Ayfer Eren', age: 49, gender: 'kadın', type: 'parent' }
+        ],
+        lastAidDate: Timestamp.fromDate(new Date(Date.now() - 110 * 24 * 60 * 60 * 1000))
+      }
+    ];
+
+    const aidTransactions = [
+      // Gebze - Sultan Orhan Mah.
+      { householdName: 'Yılmaz Ailesi', type: 'food', amount: '1 koli', notes: 'Gıda kolisi teslim edildi', daysAgo: 95, volunteerUsername: 'mehmet.sultanorhan' },
+      { householdName: 'Arslan Ailesi', type: 'cash', amount: '750 TL', notes: 'Kira yardımı', daysAgo: 60, volunteerUsername: 'ayse.sultanorhan' },
+
+      // Gebze - Adem Yavuz Mah.
+      { householdName: 'Öztürk Ailesi', type: 'food', amount: '2 koli', notes: 'Ramazan paketi', daysAgo: 100, volunteerUsername: 'ali.ademyavuz' },
+      { householdName: 'Çelik Ailesi', type: 'clothing', amount: '5 parça', notes: 'Kış giysileri', daysAgo: 20, volunteerUsername: 'fatma.ademyavuz' },
+
+      // Gebze - Atatürk Mah.
+      { householdName: 'Koç Ailesi', type: 'cash', amount: '500 TL', notes: 'Fatura desteği', daysAgo: 55, volunteerUsername: 'hasan.ataturk' },
+
+      // Gebze - Güzeller Mah.
+      { householdName: 'Şahin Ailesi', type: 'food', amount: '1 koli', notes: 'Bebek maması dahil gıda paketi', daysAgo: 92, volunteerUsername: 'ahmet.guzeller' },
+      { householdName: 'Aydın Ailesi', type: 'other', amount: '1 adet', notes: 'İlaç yardımı', daysAgo: 10, volunteerUsername: 'seda.guzeller' },
+
+      // Gebze - Mevlana Mah.
+      { householdName: 'Kara Ailesi', type: 'food', amount: '1 koli', notes: 'Aylık gıda desteği', daysAgo: 50, volunteerUsername: 'kemal.mevlana' },
+
+      // Darıca - Bağlarbaşı Mah.
+      { householdName: 'Kaya Ailesi', type: 'cash', amount: '600 TL', notes: 'Okul masrafları desteği', daysAgo: 45, volunteerUsername: 'osman.baglarbasi' },
+      { householdName: 'Doğan Ailesi', type: 'food', amount: '1 koli', notes: 'Gıda yardımı', daysAgo: 105, volunteerUsername: 'merve.baglarbasi' },
+
+      // Darıca - Bayramoğlu Mah.
+      { householdName: 'Yıldırım Ailesi', type: 'clothing', amount: '3 parça', notes: 'Okul kıyafeti', daysAgo: 25, volunteerUsername: 'ibrahim.bayramoglu' },
+
+      // Darıca - Emek Mah.
+      { householdName: 'Özkan Ailesi', type: 'food', amount: '1 koli', notes: 'Çocuklar için ek gıda', daysAgo: 88, volunteerUsername: 'fatma.emek' },
+      { householdName: 'Tan Ailesi', type: 'cash', amount: '400 TL', notes: 'İlaç yardımı', daysAgo: 40, volunteerUsername: 'burak.emek' },
+
+      // Darıca - Osmangazi Mah.
+      { householdName: 'Güneş Ailesi', type: 'food', amount: '1 koli', notes: 'Standart gıda paketi', daysAgo: 18, volunteerUsername: 'cemil.osmangazi' },
+
+      // Darıca - Fevzi Çakmak Mah.
+      { householdName: 'Demir Ailesi', type: 'clothing', amount: '3 parça', notes: 'Kış mont ve bot', daysAgo: 15, volunteerUsername: 'serkan.fevzi' },
+      { householdName: 'Eren Ailesi', type: 'food', amount: '1 koli', notes: 'Acil gıda desteği', daysAgo: 110, volunteerUsername: 'gulsen.fevzi' }
+    ];
+
+    window.seedSystemSettings = async () => {
+      try {
+        await setDoc(doc(db, 'system_settings', 'app'), {
+          min_required_version: '2.0.0',
+          update_url: 'https://example.com/apk/iyilik-kervani.apk',
+          updatedAt: Timestamp.now()
+        });
+        log('Sistem ayarları eklendi', 'success');
+      } catch (e) {
+        log(`Sistem ayarları eklenemedi: ${e.message}`, 'error');
+      }
+    };
+
+    window.seedRegions = async () => {
+      log('Bölgeler ekleniyor...', 'info');
+
+      for (const region of regions) {
+        try {
+          const docRef = await addDoc(collection(db, 'regions'), {
+            ...region,
+            createdAt: Timestamp.now()
+          });
+          regionMap[region.name] = docRef.id;
+          log(`✓ ${region.name} eklendi`, 'success');
+        } catch (e) {
+          log(`✗ ${region.name} eklenemedi: ${e.message}`, 'error');
+        }
+      }
+    };
+
+    window.seedUsers = async () => {
+      log('Kullanıcılar ekleniyor...', 'info');
+
+      for (const user of users) {
+        const usernameLower = user.username.toLowerCase();
+        try {
+          const email = `${usernameLower}@app.local`;
+          const credential = await createUserWithEmailAndPassword(auth, email, user.password);
+          const assignedRegionId = user.assignedRegionName ? regionMap[user.assignedRegionName] || null : null;
+
+          await setDoc(doc(db, 'users', credential.user.uid), {
+            username: user.username,
+            usernameLower,
+            name: user.name,
+            role: user.role,
+            assignedRegionId,
+            isActive: true,
+            createdAt: Timestamp.now()
+          });
+
+          userMap[user.username] = credential.user.uid;
+          log(`✓ ${user.username} eklendi`, 'success');
+        } catch (e) {
+          if (e.code === 'auth/email-already-in-use') {
+            const existingSnap = await getDocs(query(collection(db, 'users'), where('usernameLower', '==', usernameLower)));
+            if (!existingSnap.empty) {
+              userMap[user.username] = existingSnap.docs[0].id;
+              log(`ℹ ${user.username} zaten var (kayıt bulundu)`, 'info');
+            } else {
+              // Auth'da var ama Firestore'da yok - giriş yap ve kayıt oluştur
+              try {
+                const email = `${usernameLower}@app.local`;
+                const credential = await signInWithEmailAndPassword(auth, email, user.password);
+                const assignedRegionId = user.assignedRegionName ? regionMap[user.assignedRegionName] || null : null;
+
+                await setDoc(doc(db, 'users', credential.user.uid), {
+                  username: user.username,
+                  usernameLower,
+                  name: user.name,
+                  role: user.role,
+                  assignedRegionId,
+                  isActive: true,
+                  createdAt: Timestamp.now()
+                });
+
+                userMap[user.username] = credential.user.uid;
+                log(`✓ ${user.username} Firestore kaydı oluşturuldu`, 'success');
+              } catch (signInError) {
+                log(`✗ ${user.username} için kayıt oluşturulamadı: ${signInError.message}`, 'error');
+              }
+            }
+          } else {
+            log(`✗ ${user.username} eklenemedi: ${e.message}`, 'error');
+          }
+        }
+      }
+
+      await signOut(auth);
+    };
+
+    window.seedHouseholds = async () => {
+      log('Haneler ekleniyor...', 'info');
+
+      for (const household of households) {
+        try {
+          const regionId = regionMap[household.regionName];
+          const phoneNormalized = normalizePhone(household.primaryPhone);
+          const docRef = await addDoc(collection(db, 'households'), {
+            familyName: household.familyName,
+            regionId,
+            primaryPhone: household.primaryPhone,
+            primaryPhoneNormalized: phoneNormalized,
+            address: household.address,
+            needLevel: household.needLevel,
+            status: household.status,
+            members: household.members,
+            adults: household.members.filter((m) => m.type !== 'child').length,
+            children: household.members.filter((m) => m.type === 'child').length,
+            lastAidDate: household.lastAidDate,
+            totalAidCount: 0,
+            notes: household.notes || '',
+            createdAt: Timestamp.now()
+          });
+          householdMap[household.familyName] = docRef.id;
+          log(`✓ ${household.familyName} eklendi`, 'success');
+        } catch (e) {
+          log(`✗ ${household.familyName} eklenemedi: ${e.message}`, 'error');
+        }
+      }
+    };
+
+    window.seedAidTransactions = async () => {
+      log('Yardım kayıtları ekleniyor...', 'info');
+      const aidCount = {};
+      const latestAid = {};
+
+      for (const aid of aidTransactions) {
+        try {
+          const householdId = householdMap[aid.householdName];
+          const householdSnap = householdId ? await getDoc(doc(db, 'households', householdId)) : null;
+          const householdRegionId = householdSnap?.exists() ? householdSnap.data().regionId : null;
+          const volunteerId = userMap[aid.volunteerUsername] || null;
+          const date = Timestamp.fromDate(new Date(Date.now() - aid.daysAgo * 24 * 60 * 60 * 1000));
+
+          await addDoc(collection(db, 'aid_transactions'), {
+            householdId,
+            regionId: householdRegionId,
+            volunteerId,
+            volunteerName: aid.volunteerUsername,
+            type: aid.type,
+            amount: aid.amount,
+            notes: aid.notes,
+            evidencePhotoUrl: '',
+            date,
+            createdAt: Timestamp.now()
+          });
+
+          aidCount[householdId] = (aidCount[householdId] || 0) + 1;
+          latestAid[householdId] = date;
+          log(`✓ ${aid.householdName} için yardım eklendi`, 'success');
+        } catch (e) {
+          log(`✗ ${aid.householdName} yardımı eklenemedi: ${e.message}`, 'error');
+        }
+      }
+
+      for (const [householdId, count] of Object.entries(aidCount)) {
+        try {
+          await updateDoc(doc(db, 'households', householdId), {
+            totalAidCount: count,
+            lastAidDate: latestAid[householdId]
+          });
+        } catch (e) {
+          log(`✗ Hane güncellenemedi: ${e.message}`, 'error');
+        }
+      }
+    };
+
+    window.seedAll = async () => {
+      log('=== TÜM VERİLER EKLENİYOR ===', 'info');
+      await window.seedSystemSettings();
+      await window.seedRegions();
+      await window.seedUsers();
+      await window.seedHouseholds();
+      await window.seedAidTransactions();
+      log('=== TAMAMLANDI ===', 'success');
+      log('Admin girişi için: admin / admin123', 'info');
+    };
+
+    log('Firebase bağlantısı hazır!', 'success');
+  </script>
+</body>
+</html>

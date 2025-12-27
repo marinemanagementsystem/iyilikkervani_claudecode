@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Admin Dashboard</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13a4ec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101c22",
+                        "surface-dark": "#1c2a33", // Added a slightly lighter shade for cards
+                        "surface-highlight": "#253640", // Hover/Interactive state
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar hiding for clean horizontal scrolling */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white">
+<div class="relative flex min-h-screen w-full flex-col overflow-x-hidden pb-24">
+<!-- Top App Bar -->
+<header class="sticky top-0 z-20 flex items-center justify-between bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md p-4 pb-2">
+<div class="flex items-center gap-3">
+<div class="relative">
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-10 border-2 border-primary" data-alt="Portrait of the admin user" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCao3ZOYuu9bG1OdVIAnWdF40mGGpfukuqWb25D_QNzR7ttDkFMEUj_3HGs7ck0f8vkju6Q-0A1XJBmOaxqA7ommkmoaJ7T-vYfr5FRU4NQ_mj-_CQKMNp7Pu1emgHBWvVbj_gphwAHRAnX_m-j6BqeIAA3vkBER6CJsGiB_yp-9x58IfGioh0PPzr1OdQ2pU3_ItKI7H9HYDTNBb6Y0-0T0tVBMQJBWKxQRK9mR6R4NoHkvDxr_1ED9dCUw0h8NExTZq88crpaSabk");'>
+</div>
+<div class="absolute bottom-0 right-0 size-3 bg-green-500 rounded-full border-2 border-background-dark"></div>
+</div>
+<div>
+<p class="text-xs font-medium text-slate-500 dark:text-slate-400">Welcome back,</p>
+<h2 class="text-lg font-bold leading-tight tracking-tight">Admin User</h2>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="flex items-center justify-center size-10 rounded-full bg-surface-dark text-white hover:bg-surface-highlight transition-colors relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 size-2 bg-red-500 rounded-full"></span>
+</button>
+</div>
+</header>
+<!-- Timeframe Selector (Chips) -->
+<div class="flex gap-3 px-4 py-2 overflow-x-auto no-scrollbar">
+<button class="flex h-9 shrink-0 items-center justify-center rounded-full bg-primary px-5 transition-transform active:scale-95">
+<p class="text-white text-sm font-semibold">This Month</p>
+</button>
+<button class="flex h-9 shrink-0 items-center justify-center rounded-full bg-white dark:bg-surface-dark border border-slate-200 dark:border-transparent px-5 transition-transform active:scale-95">
+<p class="text-slate-700 dark:text-slate-300 text-sm font-medium">Last Quarter</p>
+</button>
+<button class="flex h-9 shrink-0 items-center justify-center rounded-full bg-white dark:bg-surface-dark border border-slate-200 dark:border-transparent px-5 transition-transform active:scale-95">
+<p class="text-slate-700 dark:text-slate-300 text-sm font-medium">All Time</p>
+</button>
+</div>
+<!-- Overview Headline -->
+<div class="px-4 pt-6 pb-2 flex justify-between items-end">
+<h2 class="text-2xl font-bold tracking-tight">Overview</h2>
+<span class="text-xs text-slate-500 dark:text-slate-400 mb-1">Updated 2m ago</span>
+</div>
+<!-- Hero Stats Cards -->
+<div class="flex gap-4 p-4 overflow-x-auto no-scrollbar snap-x snap-mandatory">
+<!-- Card 1 -->
+<div class="snap-center shrink-0 flex min-w-[240px] flex-col gap-3 rounded-xl p-5 bg-white dark:bg-surface-dark shadow-sm border border-slate-100 dark:border-transparent">
+<div class="flex items-center justify-between">
+<div class="p-2 bg-primary/20 rounded-lg text-primary">
+<span class="material-symbols-outlined">payments</span>
+</div>
+<span class="flex items-center text-emerald-500 text-sm font-bold bg-emerald-500/10 px-2 py-0.5 rounded">
+<span class="material-symbols-outlined text-[16px] mr-0.5">trending_up</span> 12%
+                    </span>
+</div>
+<div>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Total Aid Distributed</p>
+<p class="text-3xl font-bold tracking-tight mt-1 text-slate-900 dark:text-white">$1.2M</p>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="snap-center shrink-0 flex min-w-[240px] flex-col gap-3 rounded-xl p-5 bg-white dark:bg-surface-dark shadow-sm border border-slate-100 dark:border-transparent">
+<div class="flex items-center justify-between">
+<div class="p-2 bg-purple-500/20 rounded-lg text-purple-500">
+<span class="material-symbols-outlined">diversity_1</span>
+</div>
+<span class="flex items-center text-emerald-500 text-sm font-bold bg-emerald-500/10 px-2 py-0.5 rounded">
+<span class="material-symbols-outlined text-[16px] mr-0.5">trending_up</span> 5%
+                    </span>
+</div>
+<div>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Households Reached</p>
+<p class="text-3xl font-bold tracking-tight mt-1 text-slate-900 dark:text-white">8,450</p>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="snap-center shrink-0 flex min-w-[240px] flex-col gap-3 rounded-xl p-5 bg-white dark:bg-surface-dark shadow-sm border border-slate-100 dark:border-transparent">
+<div class="flex items-center justify-between">
+<div class="p-2 bg-orange-500/20 rounded-lg text-orange-500">
+<span class="material-symbols-outlined">volunteer_activism</span>
+</div>
+<span class="flex items-center text-emerald-500 text-sm font-bold bg-emerald-500/10 px-2 py-0.5 rounded">
+<span class="material-symbols-outlined text-[16px] mr-0.5">trending_up</span> 2%
+                    </span>
+</div>
+<div>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Active Volunteers</p>
+<p class="text-3xl font-bold tracking-tight mt-1 text-slate-900 dark:text-white">320</p>
+</div>
+</div>
+</div>
+<!-- Regional Fairness Chart -->
+<div class="px-4 py-4">
+<div class="rounded-2xl bg-white dark:bg-surface-dark p-5 shadow-sm border border-slate-100 dark:border-transparent">
+<div class="flex justify-between items-start mb-6">
+<div>
+<h3 class="text-lg font-bold text-slate-900 dark:text-white">Regional Fairness Index</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400">Distribution balance across key zones</p>
+</div>
+<button class="p-1.5 text-slate-400 hover:text-white rounded-full hover:bg-white/10">
+<span class="material-symbols-outlined">more_horiz</span>
+</button>
+</div>
+<div class="flex items-end justify-between h-48 gap-2 px-2 relative">
+<!-- Dotted Line for Target -->
+<div class="absolute w-full top-[20%] border-t border-dashed border-slate-300 dark:border-slate-600 z-0"></div>
+<div class="absolute right-0 top-[15%] text-[10px] text-slate-400 bg-white dark:bg-surface-dark px-1">Target</div>
+<!-- Bar 1 -->
+<div class="relative z-10 flex flex-col items-center flex-1 h-full justify-end group">
+<div class="w-full max-w-[40px] bg-primary rounded-t-md transition-all duration-500 hover:bg-primary/90" style="height: 85%;"></div>
+<p class="text-xs font-medium text-slate-500 dark:text-slate-400 mt-2">North</p>
+<!-- Tooltip -->
+<div class="absolute -top-8 bg-slate-800 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity">85%</div>
+</div>
+<!-- Bar 2 -->
+<div class="relative z-10 flex flex-col items-center flex-1 h-full justify-end group">
+<div class="w-full max-w-[40px] bg-primary/40 rounded-t-md transition-all duration-500 hover:bg-primary/50" style="height: 45%;"></div>
+<p class="text-xs font-medium text-slate-500 dark:text-slate-400 mt-2">South</p>
+<div class="absolute -top-8 bg-slate-800 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity">45%</div>
+</div>
+<!-- Bar 3 -->
+<div class="relative z-10 flex flex-col items-center flex-1 h-full justify-end group">
+<div class="w-full max-w-[40px] bg-primary rounded-t-md transition-all duration-500 hover:bg-primary/90" style="height: 72%;"></div>
+<p class="text-xs font-medium text-slate-500 dark:text-slate-400 mt-2">East</p>
+<div class="absolute -top-8 bg-slate-800 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity">72%</div>
+</div>
+<!-- Bar 4 -->
+<div class="relative z-10 flex flex-col items-center flex-1 h-full justify-end group">
+<div class="w-full max-w-[40px] bg-red-400 rounded-t-md transition-all duration-500 hover:bg-red-500" style="height: 30%;"></div>
+<p class="text-xs font-medium text-slate-500 dark:text-slate-400 mt-2">West</p>
+<div class="absolute -top-8 bg-red-900 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity">Critical</div>
+</div>
+</div>
+<div class="mt-4 flex gap-4 justify-center">
+<div class="flex items-center gap-2">
+<div class="size-3 rounded-full bg-primary"></div>
+<p class="text-xs text-slate-500 dark:text-slate-400">Balanced</p>
+</div>
+<div class="flex items-center gap-2">
+<div class="size-3 rounded-full bg-primary/40"></div>
+<p class="text-xs text-slate-500 dark:text-slate-400">Under-served</p>
+</div>
+<div class="flex items-center gap-2">
+<div class="size-3 rounded-full bg-red-400"></div>
+<p class="text-xs text-slate-500 dark:text-slate-400">Critical</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Regional Breakdown List -->
+<div class="px-4 pb-6">
+<h2 class="text-xl font-bold tracking-tight mb-4 px-1">Quota Fulfillment</h2>
+<div class="flex flex-col gap-3">
+<!-- List Item 1 -->
+<div class="flex items-center p-3 bg-white dark:bg-surface-dark rounded-xl border border-slate-100 dark:border-transparent">
+<div class="flex items-center justify-center size-10 rounded-lg bg-blue-500/20 text-blue-500 font-bold mr-3">N</div>
+<div class="flex-1">
+<div class="flex justify-between mb-1">
+<span class="text-sm font-semibold text-slate-900 dark:text-white">North District</span>
+<span class="text-xs font-medium text-slate-500 dark:text-slate-400">850/1000</span>
+</div>
+<div class="h-2 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full" style="width: 85%"></div>
+</div>
+</div>
+</div>
+<!-- List Item 2 -->
+<div class="flex items-center p-3 bg-white dark:bg-surface-dark rounded-xl border border-slate-100 dark:border-transparent">
+<div class="flex items-center justify-center size-10 rounded-lg bg-purple-500/20 text-purple-500 font-bold mr-3">S</div>
+<div class="flex-1">
+<div class="flex justify-between mb-1">
+<span class="text-sm font-semibold text-slate-900 dark:text-white">South District</span>
+<span class="text-xs font-medium text-slate-500 dark:text-slate-400">450/1000</span>
+</div>
+<div class="h-2 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+<div class="h-full bg-purple-500 rounded-full" style="width: 45%"></div>
+</div>
+</div>
+</div>
+<!-- List Item 3 -->
+<div class="flex items-center p-3 bg-white dark:bg-surface-dark rounded-xl border border-slate-100 dark:border-transparent">
+<div class="flex items-center justify-center size-10 rounded-lg bg-orange-500/20 text-orange-500 font-bold mr-3">W</div>
+<div class="flex-1">
+<div class="flex justify-between mb-1">
+<span class="text-sm font-semibold text-slate-900 dark:text-white">West District</span>
+<span class="text-xs font-medium text-slate-500 dark:text-slate-400">300/1000</span>
+</div>
+<div class="h-2 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+<div class="h-full bg-orange-500 rounded-full" style="width: 30%"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Recent Activity Header -->
+<div class="px-4 pt-2 pb-2">
+<h2 class="text-xl font-bold tracking-tight">Recent Activity</h2>
+</div>
+<!-- Activity Feed -->
+<div class="px-4 pb-20">
+<div class="relative pl-4 border-l-2 border-slate-200 dark:border-slate-700 space-y-6">
+<!-- Activity 1 -->
+<div class="relative">
+<div class="absolute -left-[21px] top-1 size-3 rounded-full border-2 border-background-light dark:border-background-dark bg-primary"></div>
+<div class="flex flex-col">
+<span class="text-xs text-slate-500 dark:text-slate-400 mb-0.5">Today, 10:23 AM</span>
+<p class="text-sm text-slate-900 dark:text-white font-medium">Approved Food Package #4029</p>
+<p class="text-xs text-slate-500 dark:text-slate-400">North District • 120 Households</p>
+</div>
+</div>
+<!-- Activity 2 -->
+<div class="relative">
+<div class="absolute -left-[21px] top-1 size-3 rounded-full border-2 border-background-light dark:border-background-dark bg-slate-400"></div>
+<div class="flex flex-col">
+<span class="text-xs text-slate-500 dark:text-slate-400 mb-0.5">Yesterday, 4:00 PM</span>
+<p class="text-sm text-slate-900 dark:text-white font-medium">Volunteer Allocation Updated</p>
+<p class="text-xs text-slate-500 dark:text-slate-400">Assigned 15 new volunteers to East District</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Floating Action Button -->
+<button class="fixed bottom-24 right-4 z-40 flex items-center justify-center size-14 rounded-full bg-primary text-white shadow-lg shadow-primary/30 hover:bg-sky-500 transition-colors">
+<span class="material-symbols-outlined text-2xl">add</span>
+</button>
+<!-- Bottom Navigation -->
+<nav class="fixed bottom-0 z-50 w-full bg-white dark:bg-[#0c1418] border-t border-slate-200 dark:border-surface-dark pb-safe">
+<div class="flex justify-around items-center h-16">
+<button class="flex flex-col items-center justify-center w-full h-full text-primary gap-1">
+<span class="material-symbols-outlined text-[24px]">dashboard</span>
+<span class="text-[10px] font-medium">Home</span>
+</button>
+<button class="flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 gap-1 transition-colors">
+<span class="material-symbols-outlined text-[24px]" data-location="City Map">map</span>
+<span class="text-[10px] font-medium">Map</span>
+</button>
+<button class="flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 gap-1 transition-colors">
+<span class="material-symbols-outlined text-[24px]">groups</span>
+<span class="text-[10px] font-medium">Volunteers</span>
+</button>
+<button class="flex flex-col items-center justify-center w-full h-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 gap-1 transition-colors">
+<span class="material-symbols-outlined text-[24px]">settings</span>
+<span class="text-[10px] font-medium">Settings</span>
+</button>
+</div>
+</nav>
+</div>
+</body></html>

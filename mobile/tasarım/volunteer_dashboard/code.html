@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Volunteer Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13a4ec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101c22",
+                        "surface-dark": "#1c2327",
+                        "surface-light": "#ffffff",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white antialiased min-h-screen relative pb-20">
+<!-- Header Section -->
+<header class="sticky top-0 z-30 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors duration-300">
+<div class="px-4 py-4 pt-6 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="relative">
+<div class="h-12 w-12 rounded-full bg-cover bg-center border-2 border-primary" data-alt="Portrait of a smiling volunteer looking confident" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBxtYASEmSZM4QdsG8lBqx3ij8O6MKLmrsQGEontzQcp9infr8kDaJ9yVZeyKgxib1DwB_U8-zgIUXgzRMVXnnO-zWlHQmt5f12gTBaokRv0p5efAgJXYRiGb1FIL6CGuNf-TvPfs068xi34a_xEBaZXGD-PuFHhh1QVO5P_7uUKUdV3PxUOnhRoW1joCy7aBXDFPKaKRLEQp10-DLeZhcHw6Qsq6XXKEhha1HKglS6S0eOfU6MNIdQE0AoYrBlJFs3Kiz5lI3tZu37");'>
+</div>
+<div class="absolute bottom-0 right-0 h-3 w-3 bg-green-500 rounded-full border-2 border-white dark:border-[#101c22]"></div>
+</div>
+<div class="flex flex-col">
+<h1 class="text-lg font-bold leading-tight text-slate-900 dark:text-white">Hello, Sarah</h1>
+<div class="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
+<span class="material-symbols-outlined text-[14px]">location_on</span>
+<span>North District</span>
+</div>
+</div>
+</div>
+<!-- Quick Action: Scan QR -->
+<button aria-label="Scan QR Code" class="group flex items-center justify-center h-10 w-10 rounded-full bg-primary/10 hover:bg-primary/20 text-primary transition-colors">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">qr_code_scanner</span>
+</button>
+</div>
+</header>
+<!-- Main Content Scroll Area -->
+<main class="flex flex-col gap-6 pt-4">
+<!-- Stats Section -->
+<section class="px-4">
+<div class="grid grid-cols-2 gap-3">
+<div class="flex flex-col gap-1 rounded-2xl p-4 bg-surface-light dark:bg-surface-dark shadow-sm border border-slate-100 dark:border-slate-800">
+<div class="flex items-center gap-2 mb-1">
+<div class="p-1.5 rounded-full bg-blue-500/10 text-primary">
+<span class="material-symbols-outlined text-[20px]">door_front</span>
+</div>
+<p class="text-xs font-medium text-slate-500 dark:text-slate-400">Visited</p>
+</div>
+<p class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">12</p>
+</div>
+<div class="flex flex-col gap-1 rounded-2xl p-4 bg-surface-light dark:bg-surface-dark shadow-sm border border-slate-100 dark:border-slate-800">
+<div class="flex items-center gap-2 mb-1">
+<div class="p-1.5 rounded-full bg-emerald-500/10 text-emerald-500">
+<span class="material-symbols-outlined text-[20px]">inventory_2</span>
+</div>
+<p class="text-xs font-medium text-slate-500 dark:text-slate-400">Distributed</p>
+</div>
+<p class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">45</p>
+</div>
+</div>
+</section>
+<!-- Urgent Aid Needed Carousel -->
+<section class="flex flex-col gap-3">
+<div class="px-4 flex items-center justify-between">
+<h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+<span class="material-symbols-outlined text-red-500">warning</span>
+                    Urgent Aid Needed
+                </h2>
+<a class="text-xs font-medium text-primary hover:text-primary/80" href="#">View Map</a>
+</div>
+<div class="flex overflow-x-auto no-scrollbar gap-4 px-4 pb-2 snap-x">
+<!-- Card 1 -->
+<div class="snap-center shrink-0 w-[85vw] max-w-[320px] flex flex-col rounded-2xl bg-surface-light dark:bg-surface-dark shadow-md border-l-4 border-red-500 overflow-hidden">
+<div class="relative h-32 w-full bg-cover bg-center" data-alt="Abstract map view of a residential neighborhood with markers" style='background-image: linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,0.6)), url("https://lh3.googleusercontent.com/aida-public/AB6AXuC9G0PiJmcRWimmWOsgQfZdigBCNBuPtg1TDtDhIRVm06vEPZyb2fjmV-YOZyn4i-IGDSAg3Hm1hpZAFkvWGErKfV84-U4rMhO0NcfBmq-7IwBsThZFQX3_TgqyEkOk53P-swI8XYGPVjlfqlbNhCclzzJrnVMimQX4UvSW03pEkaDaECJVHORkq09osCxwCP6amiDTpWrCJLLCLV-x0kn7csepp336Gn_cYjrDGhU3Rgs9lFc0QK-HtSbAEX9JfC1p128Ccq8SplAE");'>
+<div class="absolute top-3 right-3">
+<span class="px-2 py-1 rounded-lg bg-red-500 text-white text-[10px] font-bold uppercase tracking-wider shadow-sm">Critical</span>
+</div>
+<div class="absolute bottom-3 left-3">
+<p class="text-white text-xs font-medium bg-black/40 px-2 py-0.5 rounded backdrop-blur-sm">0.5 km away</p>
+</div>
+</div>
+<div class="p-4 flex flex-col gap-3">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="text-base font-bold text-slate-900 dark:text-white">The Rahman Family</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Needs: <span class="text-red-600 dark:text-red-400 font-medium">Food Supply (Baby Formula)</span></p>
+</div>
+</div>
+<div class="flex gap-2 mt-1">
+<button class="flex-1 h-10 bg-primary hover:bg-primary/90 text-white text-sm font-semibold rounded-lg flex items-center justify-center gap-2 transition-colors">
+<span class="material-symbols-outlined text-[18px]">navigation</span>
+                                Navigate
+                            </button>
+<button class="h-10 w-10 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+<span class="material-symbols-outlined text-[20px]">call</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="snap-center shrink-0 w-[85vw] max-w-[320px] flex flex-col rounded-2xl bg-surface-light dark:bg-surface-dark shadow-md border-l-4 border-orange-500 overflow-hidden">
+<div class="relative h-32 w-full bg-cover bg-center" data-alt="Street view of a suburban area with houses" style='background-image: linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,0.6)), url("https://lh3.googleusercontent.com/aida-public/AB6AXuAmSmiUXfXnHQV3rGbY-v1fJ72uw4TrCjxDboDXq-ljbkUWLIxdB_LDGRSoX5tFafF9IIFkXw00XJ2NMcphn0SMFY0jySUOJf_6tGSFyE-sK6EcArIyW6SVdyhqbNKbt1F3Bab0cMpkMJQwKYgpmdY_wW3xa6PLxpp741iBjJv6z--NGsSXTnyvwIgE77HcUl4eV5U-QJsYEET9TKJS0zmpn09pewSjJvTUNAtNU5GV5EeiTd0Xd0yoh1o3gQqoXMdVwpIUbFSIr1KW");'>
+<div class="absolute top-3 right-3">
+<span class="px-2 py-1 rounded-lg bg-orange-500 text-white text-[10px] font-bold uppercase tracking-wider shadow-sm">High Priority</span>
+</div>
+<div class="absolute bottom-3 left-3">
+<p class="text-white text-xs font-medium bg-black/40 px-2 py-0.5 rounded backdrop-blur-sm">1.2 km away</p>
+</div>
+</div>
+<div class="p-4 flex flex-col gap-3">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="text-base font-bold text-slate-900 dark:text-white">The Tanaka Family</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Needs: <span class="text-orange-600 dark:text-orange-400 font-medium">Medical Assistance</span></p>
+</div>
+</div>
+<div class="flex gap-2 mt-1">
+<button class="flex-1 h-10 bg-primary hover:bg-primary/90 text-white text-sm font-semibold rounded-lg flex items-center justify-center gap-2 transition-colors">
+<span class="material-symbols-outlined text-[18px]">navigation</span>
+                                Navigate
+                            </button>
+<button class="h-10 w-10 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+<span class="material-symbols-outlined text-[20px]">call</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Spacer for right padding in carousel -->
+<div class="w-1 shrink-0"></div>
+</div>
+</section>
+<!-- Recent Activity Feed -->
+<section class="px-4 pb-4">
+<h2 class="text-lg font-bold text-slate-900 dark:text-white mb-3">Recent Activity</h2>
+<div class="flex flex-col gap-3">
+<!-- Activity Item 1 -->
+<div class="flex items-start gap-4 p-3 rounded-xl bg-surface-light dark:bg-surface-dark border border-slate-100 dark:border-slate-800 shadow-sm">
+<div class="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-green-500/10 text-green-500">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+</div>
+<div class="flex-1">
+<p class="text-sm font-medium text-slate-900 dark:text-white">Distributed Hygiene Kit</p>
+<p class="text-xs text-slate-500 dark:text-slate-400">ID #4022 • The Kowalski Family</p>
+</div>
+<p class="text-xs font-medium text-slate-400 whitespace-nowrap">2h ago</p>
+</div>
+<!-- Activity Item 2 -->
+<div class="flex items-start gap-4 p-3 rounded-xl bg-surface-light dark:bg-surface-dark border border-slate-100 dark:border-slate-800 shadow-sm">
+<div class="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-500/10 text-blue-500">
+<span class="material-symbols-outlined text-[18px]">edit_note</span>
+</div>
+<div class="flex-1">
+<p class="text-sm font-medium text-slate-900 dark:text-white">Updated Household Status</p>
+<p class="text-xs text-slate-500 dark:text-slate-400">Marked safe • The Ahmed Family</p>
+</div>
+<p class="text-xs font-medium text-slate-400 whitespace-nowrap">4h ago</p>
+</div>
+<!-- Activity Item 3 -->
+<div class="flex items-start gap-4 p-3 rounded-xl bg-surface-light dark:bg-surface-dark border border-slate-100 dark:border-slate-800 shadow-sm">
+<div class="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-green-500/10 text-green-500">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+</div>
+<div class="flex-1">
+<p class="text-sm font-medium text-slate-900 dark:text-white">Delivered Food Pack</p>
+<p class="text-xs text-slate-500 dark:text-slate-400">ID #4019 • The Chen Family</p>
+</div>
+<p class="text-xs font-medium text-slate-400 whitespace-nowrap">Yesterday</p>
+</div>
+</div>
+<button class="mt-4 w-full py-3 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-primary transition-colors">
+                View All History
+            </button>
+</section>
+</main>
+<!-- Floating Action Button (Optional secondary placement, primary is in nav or list usually, sticking to plan request) -->
+<!-- The user requested "prominent ... FAB or top-right action". I placed scan in top right. Let's add a main "Log Aid" FAB above nav. -->
+<div class="fixed bottom-20 right-4 z-40">
+<button class="flex items-center gap-2 h-14 pl-4 pr-5 rounded-full bg-primary text-white shadow-lg shadow-primary/30 hover:bg-primary/90 transition-transform hover:scale-105 active:scale-95">
+<span class="material-symbols-outlined text-[24px]">add_task</span>
+<span class="font-bold text-sm">Log Aid</span>
+</button>
+</div>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 w-full z-50 bg-surface-light dark:bg-[#1c2327] border-t border-slate-200 dark:border-[#283339] pb-safe">
+<div class="flex justify-between items-center px-6 h-16">
+<a class="flex flex-col items-center justify-center gap-1 text-primary w-16" href="#">
+<span class="material-symbols-outlined text-[24px] fill-current">home</span>
+<span class="text-[10px] font-medium">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center gap-1 text-slate-400 dark:text-[#9db0b9] hover:text-slate-600 dark:hover:text-white w-16 transition-colors" href="#">
+<span class="material-symbols-outlined text-[24px]">map</span>
+<span class="text-[10px] font-medium">Map</span>
+</a>
+<a class="flex flex-col items-center justify-center gap-1 text-slate-400 dark:text-[#9db0b9] hover:text-slate-600 dark:hover:text-white w-16 transition-colors" href="#">
+<span class="material-symbols-outlined text-[24px]">history</span>
+<span class="text-[10px] font-medium">History</span>
+</a>
+<a class="flex flex-col items-center justify-center gap-1 text-slate-400 dark:text-[#9db0b9] hover:text-slate-600 dark:hover:text-white w-16 transition-colors" href="#">
+<span class="material-symbols-outlined text-[24px]">account_circle</span>
+<span class="text-[10px] font-medium">Profile</span>
+</a>
+</div>
+<!-- Safe area spacer for newer iPhones -->
+<div class="h-4 bg-surface-light dark:bg-[#1c2327]"></div>
+</nav>
+</body></html>

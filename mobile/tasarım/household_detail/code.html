@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Household Detail</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13a4ec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101c22",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#18262d", // Slightly lighter than background-dark
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom scrollbar hide for clean UI */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white font-display">
+<div class="relative flex h-full min-h-screen w-full flex-col overflow-x-hidden pb-24">
+<!-- TopAppBar -->
+<div class="sticky top-0 z-10 flex items-center bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-sm p-4 border-b border-slate-200 dark:border-slate-800 justify-between">
+<button class="flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
+<span class="material-symbols-outlined text-slate-900 dark:text-white">arrow_back</span>
+</button>
+<h2 class="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center">Household #1042</h2>
+<button class="flex w-10 items-center justify-center rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
+<p class="text-primary text-base font-bold leading-normal tracking-[0.015em] shrink-0">Edit</p>
+</button>
+</div>
+<!-- ProfileHeader -->
+<div class="flex p-4 flex-col gap-4">
+<div class="flex w-full flex-col gap-4 p-4 rounded-xl bg-surface-light dark:bg-surface-dark shadow-sm">
+<div class="flex gap-4 items-start">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-24 w-24 border-2 border-slate-200 dark:border-slate-700 shrink-0" data-alt="Portrait of Ahmed Al-Fulan head of household" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDkSzbf9c3wUmdsaBVo3Q3u-A3_u9zQ0zPCVYX_h1oRf090NGEqRxB8YtxWeONjFOKBvXNBqTlBhu9sOwnVga1uSmiegw41J2_UPugdheyrJuBRCH9VaJjYjxE7wOQS6IgmrYSzFSWHAmvxfPHMCPaiBJSTKvbT4zatLIr9Eo4lQfwi1KyUNiebLMwNPCqi4ta-eD9bkbnxdBsdb4jFvaV8ydjyQ2irIN1y68qD2t49fQh8kzS9wDOh9y-ucfSLwoRlfksll-AFwBCp");'>
+</div>
+<div class="flex flex-col justify-center flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<h1 class="text-slate-900 dark:text-white text-xl font-bold leading-tight tracking-[-0.015em] truncate">Ahmed Al-Fulan</h1>
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
+                                Critical
+                            </span>
+</div>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-normal leading-normal mt-1">ID: 1042 • Verified</p>
+<div class="flex items-center gap-1 mt-2 text-slate-500 dark:text-slate-400">
+<span class="material-symbols-outlined text-[18px]">location_on</span>
+<p class="text-sm font-normal leading-normal truncate">123 District B, Amman City</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- ButtonGroup (Quick Actions) -->
+<div class="px-4 pb-2">
+<div class="flex gap-3">
+<button class="flex flex-1 items-center justify-center gap-2 h-11 px-4 rounded-lg bg-primary hover:bg-primary/90 transition-colors text-white shadow-sm">
+<span class="material-symbols-outlined text-[20px]">share_location</span>
+<span class="text-sm font-bold truncate">Request Location</span>
+</button>
+<button class="flex flex-1 items-center justify-center gap-2 h-11 px-4 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors text-slate-900 dark:text-white shadow-sm">
+<span class="material-symbols-outlined text-[20px]">call</span>
+<span class="text-sm font-bold truncate">Call</span>
+</button>
+</div>
+</div>
+<div class="h-4"></div>
+<!-- Family Members Section -->
+<div>
+<div class="flex items-center justify-between px-4 pb-2 pt-2">
+<h3 class="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">Family Members (5)</h3>
+<span class="text-primary text-sm font-medium cursor-pointer">View All</span>
+</div>
+<div class="flex flex-col">
+<!-- Wife -->
+<div class="flex items-center gap-4 px-4 py-3 hover:bg-slate-50 dark:hover:bg-surface-dark transition-colors border-b border-slate-100 dark:border-slate-800">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-12 w-12 shrink-0" data-alt="Portrait of Fatima the wife" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAKszTbHlhT5W5_vu4jv_ZS2JP8c7gckljKlNzthmE5TVl4oFthoh2D1rWm_2IFRmDq-STK7SPTDLOfFA8vpl3MHpdRECPTiz6vRi7gQa5R8IZfw4PEjjahbJeMfr4xfPE4GHoKOAtY7ekBnDJftGUsmVBuMyKLrMkmzrIWff9othrxGMTntw32GrRYk3UjW0_IlNoZjHXkC3dNq_gLDZzfGP5y09Xlek3p_ktnu8ecuVc_3Za7_l3NYNGL7mYCf_Gonl3muX1jWhjX");'>
+</div>
+<div class="flex flex-col flex-1">
+<p class="text-slate-900 dark:text-white text-base font-medium leading-normal line-clamp-1">Fatima (Wife)</p>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-normal leading-normal">Age: 34 • Unemployed</p>
+</div>
+<span class="material-symbols-outlined text-slate-400">chevron_right</span>
+</div>
+<!-- Son -->
+<div class="flex items-center gap-4 px-4 py-3 hover:bg-slate-50 dark:hover:bg-surface-dark transition-colors border-b border-slate-100 dark:border-slate-800">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-12 w-12 shrink-0 bg-slate-200 dark:bg-slate-700 flex items-center justify-center" data-alt="Placeholder avatar for child">
+<span class="material-symbols-outlined text-slate-400">person</span>
+</div>
+<div class="flex flex-col flex-1">
+<p class="text-slate-900 dark:text-white text-base font-medium leading-normal line-clamp-1">Omar (Son)</p>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-normal leading-normal">Age: 12 • Student</p>
+</div>
+<span class="material-symbols-outlined text-slate-400">chevron_right</span>
+</div>
+<!-- Daughter -->
+<div class="flex items-center gap-4 px-4 py-3 hover:bg-slate-50 dark:hover:bg-surface-dark transition-colors">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-12 w-12 shrink-0 bg-slate-200 dark:bg-slate-700 flex items-center justify-center" data-alt="Placeholder avatar for child">
+<span class="material-symbols-outlined text-slate-400">person</span>
+</div>
+<div class="flex flex-col flex-1">
+<p class="text-slate-900 dark:text-white text-base font-medium leading-normal line-clamp-1">Layla (Daughter)</p>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-normal leading-normal">Age: 8 • Student</p>
+</div>
+<span class="material-symbols-outlined text-slate-400">chevron_right</span>
+</div>
+</div>
+</div>
+<div class="h-2 bg-slate-100 dark:bg-[#0c161b]"></div>
+<!-- Aid History Section -->
+<div>
+<div class="flex items-center justify-between px-4 pb-2 pt-4">
+<h3 class="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">Aid History</h3>
+<span class="material-symbols-outlined text-slate-400 text-xl">filter_list</span>
+</div>
+<div class="flex flex-col px-4 pt-2 gap-3">
+<!-- Transaction 1 -->
+<div class="flex flex-col gap-2 p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-surface-light dark:bg-surface-dark">
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-3">
+<div class="flex items-center justify-center size-10 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400">
+<span class="material-symbols-outlined text-[20px]">inventory_2</span>
+</div>
+<div>
+<p class="text-slate-900 dark:text-white text-sm font-bold">Food Parcel (Large)</p>
+<p class="text-slate-500 dark:text-slate-400 text-xs">Distributed by Team A</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-slate-900 dark:text-white text-sm font-bold">Oct 12</p>
+<p class="text-slate-500 dark:text-slate-400 text-xs">2023</p>
+</div>
+</div>
+</div>
+<!-- Transaction 2 -->
+<div class="flex flex-col gap-2 p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-surface-light dark:bg-surface-dark">
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-3">
+<div class="flex items-center justify-center size-10 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+<span class="material-symbols-outlined text-[20px]">medical_services</span>
+</div>
+<div>
+<p class="text-slate-900 dark:text-white text-sm font-bold">Medical Kit</p>
+<p class="text-slate-500 dark:text-slate-400 text-xs">Routine Checkup Support</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-slate-900 dark:text-white text-sm font-bold">Sep 01</p>
+<p class="text-slate-500 dark:text-slate-400 text-xs">2023</p>
+</div>
+</div>
+</div>
+<!-- Transaction 3 -->
+<div class="flex flex-col gap-2 p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-surface-light dark:bg-surface-dark opacity-70">
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-3">
+<div class="flex items-center justify-center size-10 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400">
+<span class="material-symbols-outlined text-[20px]">checkroom</span>
+</div>
+<div>
+<p class="text-slate-900 dark:text-white text-sm font-bold">Winter Clothing</p>
+<p class="text-slate-500 dark:text-slate-400 text-xs">Annual Winter Drive</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-slate-900 dark:text-white text-sm font-bold">Jan 15</p>
+<p class="text-slate-500 dark:text-slate-400 text-xs">2023</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Sticky Bottom Action Button -->
+<div class="fixed bottom-0 left-0 w-full p-4 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800">
+<button class="flex w-full items-center justify-center gap-2 h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold text-base shadow-lg transition-transform active:scale-[0.98]">
+<span class="material-symbols-outlined">add_circle</span>
+            Record New Aid
+        </button>
+</div>
+</body></html>

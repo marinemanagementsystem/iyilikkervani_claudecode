@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Firebase Cleanup Script</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 1000px; margin: 50px auto; padding: 20px; background: #0f172a; color: #e2e8f0; }
+    h1 { color: #f87171; }
+    h2 { color: #38bdf8; margin-top: 30px; }
+    button { background: #38bdf8; color: #0f172a; border: none; padding: 12px 20px; font-size: 14px; cursor: pointer; border-radius: 8px; margin: 6px 4px 0 0; font-weight: 600; }
+    button:hover { background: #0ea5e9; color: #fff; }
+    button.danger { background: #ef4444; color: #fff; }
+    button.danger:hover { background: #dc2626; }
+    button:disabled { background: #475569; cursor: not-allowed; color: #cbd5e1; }
+    .log { background: #0b1220; padding: 16px; border-radius: 12px; margin-top: 20px; max-height: 400px; overflow-y: auto; }
+    .log p { margin: 4px 0; font-family: Consolas, monospace; font-size: 13px; }
+    .success { color: #22c55e; }
+    .error { color: #f87171; }
+    .info { color: #38bdf8; }
+    .warn { color: #fbbf24; }
+    .section { background: #1e293b; padding: 20px; border-radius: 12px; margin-bottom: 20px; }
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+    .stat { background: #334155; padding: 16px; border-radius: 8px; text-align: center; }
+    .stat-value { font-size: 28px; font-weight: bold; color: #38bdf8; }
+    .stat-label { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <h1>🧹 İyilik Kervanı - Veri Temizleme</h1>
+  <p style="color: #94a3b8;">Bu sayfa duplicate verileri tespit edip siler. DİKKAT: Silme işlemleri geri alınamaz!</p>
+
+  <!-- Stats -->
+  <div class="stats" id="stats">
+    <div class="stat">
+      <div class="stat-value" id="regionCount">-</div>
+      <div class="stat-label">Bölge</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" id="userCount">-</div>
+      <div class="stat-label">Kullanıcı</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" id="householdCount">-</div>
+      <div class="stat-label">Hane</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" id="aidCount">-</div>
+      <div class="stat-label">Yardım</div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="section">
+    <h2>🔍 Analiz</h2>
+    <button onclick="loadStats()">📊 İstatistikleri Yükle</button>
+    <button onclick="findDuplicateRegions()">🗺️ Duplicate Bölgeleri Bul</button>
+    <button onclick="findDuplicateUsers()">👥 Duplicate Kullanıcıları Bul</button>
+    <button onclick="findDuplicateHouseholds()">🏠 Duplicate Haneleri Bul</button>
+  </div>
+
+  <div class="section">
+    <h2>🗑️ Temizleme</h2>
+    <button class="danger" onclick="deleteDuplicateRegions()">Duplicate Bölgeleri Sil</button>
+    <button class="danger" onclick="deleteDuplicateUsers()">Duplicate Kullanıcıları Sil</button>
+    <button class="danger" onclick="deleteDuplicateHouseholds()">Duplicate Haneleri Sil</button>
+    <button class="danger" onclick="deleteOrphanAidTransactions()">Sahipsiz Yardımları Sil</button>
+  </div>
+
+  <div class="section">
+    <h2>⚠️ Tam Temizlik (DİKKAT!)</h2>
+    <button class="danger" onclick="deleteAllRegions()">TÜM Bölgeleri Sil</button>
+    <button class="danger" onclick="deleteAllUsers()">TÜM Kullanıcıları Sil</button>
+    <button class="danger" onclick="deleteAllHouseholds()">TÜM Haneleri Sil</button>
+    <button class="danger" onclick="deleteAllAidTransactions()">TÜM Yardımları Sil</button>
+    <button class="danger" onclick="deleteEverything()">🔥 HER ŞEYİ SİL</button>
+  </div>
+
+  <div class="section">
+    <button onclick="clearLog()">🧹 Log Temizle</button>
+  </div>
+
+  <div class="log" id="log">
+    <p class="info">Hazır. Önce "İstatistikleri Yükle" butonuna tıklayın.</p>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import {
+      getFirestore,
+      collection,
+      getDocs,
+      deleteDoc,
+      doc,
+      query,
+      writeBatch
+    } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    import {
+      getAuth,
+      deleteUser,
+      signInWithEmailAndPassword
+    } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA1kSE0St1cyTOyZlFycWgp2hkKO4Bwvl8",
+      authDomain: "iyilikkernanimobile.firebaseapp.com",
+      projectId: "iyilikkernanimobile",
+      storageBucket: "iyilikkernanimobile.firebasestorage.app",
+      messagingSenderId: "34126359922",
+      appId: "1:34126359922:web:2cd44501f6456628ebc1eb"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    const logEl = document.getElementById('log');
+
+    function log(msg, type = 'info') {
+      const p = document.createElement('p');
+      p.className = type;
+      p.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+      logEl.appendChild(p);
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    window.clearLog = () => {
+      logEl.innerHTML = '<p class="info">Log temizlendi.</p>';
+    };
+
+    // ==================== STATS ====================
+    window.loadStats = async () => {
+      log('İstatistikler yükleniyor...', 'info');
+      try {
+        const [regions, users, households, aid] = await Promise.all([
+          getDocs(collection(db, 'regions')),
+          getDocs(collection(db, 'users')),
+          getDocs(collection(db, 'households')),
+          getDocs(collection(db, 'aid_transactions'))
+        ]);
+
+        document.getElementById('regionCount').textContent = regions.size;
+        document.getElementById('userCount').textContent = users.size;
+        document.getElementById('householdCount').textContent = households.size;
+        document.getElementById('aidCount').textContent = aid.size;
+
+        log(`Bölge: ${regions.size}, Kullanıcı: ${users.size}, Hane: ${households.size}, Yardım: ${aid.size}`, 'success');
+      } catch (e) {
+        log(`Hata: ${e.message}`, 'error');
+      }
+    };
+
+    // ==================== FIND DUPLICATES ====================
+    window.findDuplicateRegions = async () => {
+      log('Duplicate bölgeler aranıyor...', 'info');
+      try {
+        const snap = await getDocs(collection(db, 'regions'));
+        const seen = new Map();
+        const duplicates = [];
+
+        snap.docs.forEach(doc => {
+          const name = doc.data().name;
+          if (seen.has(name)) {
+            duplicates.push({ id: doc.id, name });
+          } else {
+            seen.set(name, doc.id);
+          }
+        });
+
+        if (duplicates.length > 0) {
+          log(`${duplicates.length} duplicate bölge bulundu:`, 'warn');
+          duplicates.forEach(d => log(`  - ${d.name} (${d.id})`, 'warn'));
+        } else {
+          log('Duplicate bölge yok ✓', 'success');
+        }
+        return duplicates;
+      } catch (e) {
+        log(`Hata: ${e.message}`, 'error');
+        return [];
+      }
+    };
+
+    window.findDuplicateUsers = async () => {
+      log('Duplicate kullanıcılar aranıyor...', 'info');
+      try {
+        const snap = await getDocs(collection(db, 'users'));
+        const seen = new Map();
+        const duplicates = [];
+
+        snap.docs.forEach(doc => {
+          const username = doc.data().usernameLower || doc.data().username?.toLowerCase();
+          if (username) {
+            if (seen.has(username)) {
+              duplicates.push({ id: doc.id, username, name: doc.data().name });
+            } else {
+              seen.set(username, doc.id);
+            }
+          }
+        });
+
+        if (duplicates.length > 0) {
+          log(`${duplicates.length} duplicate kullanıcı bulundu:`, 'warn');
+          duplicates.forEach(d => log(`  - ${d.username} / ${d.name} (${d.id})`, 'warn'));
+        } else {
+          log('Duplicate kullanıcı yok ✓', 'success');
+        }
+        return duplicates;
+      } catch (e) {
+        log(`Hata: ${e.message}`, 'error');
+        return [];
+      }
+    };
+
+    window.findDuplicateHouseholds = async () => {
+      log('Duplicate haneler aranıyor...', 'info');
+      try {
+        const snap = await getDocs(collection(db, 'households'));
+        const seen = new Map();
+        const duplicates = [];
+
+        snap.docs.forEach(doc => {
+          const data = doc.data();
+          // Phone number ile duplicate kontrolü
+          const phone = data.primaryPhoneNormalized || data.primaryPhone?.replace(/\D/g, '');
+          if (phone) {
+            if (seen.has(phone)) {
+              duplicates.push({ id: doc.id, phone, name: data.familyName });
+            } else {
+              seen.set(phone, doc.id);
+            }
+          }
+        });
+
+        if (duplicates.length > 0) {
+          log(`${duplicates.length} duplicate hane bulundu (aynı telefon):`, 'warn');
+          duplicates.forEach(d => log(`  - ${d.name} / ${d.phone} (${d.id})`, 'warn'));
+        } else {
+          log('Duplicate hane yok ✓', 'success');
+        }
+        return duplicates;
+      } catch (e) {
+        log(`Hata: ${e.message}`, 'error');
+        return [];
+      }
+    };
+
+    // ==================== DELETE DUPLICATES ====================
+    window.deleteDuplicateRegions = async () => {
+      if (!confirm('Duplicate bölgeleri silmek istediğinize emin misiniz?')) return;
+
+      const duplicates = await findDuplicateRegions();
+      if (duplicates.length === 0) return;
+
+      log('Duplicate bölgeler siliniyor...', 'info');
+      let deleted = 0;
+      for (const d of duplicates) {
+        try {
+          await deleteDoc(doc(db, 'regions', d.id));
+          log(`✓ Silindi: ${d.name}`, 'success');
+          deleted++;
+        } catch (e) {
+          log(`✗ Silinemedi: ${d.name} - ${e.message}`, 'error');
+        }
+      }
+      log(`${deleted} duplicate bölge silindi`, 'success');
+      loadStats();
+    };
+
+    window.deleteDuplicateUsers = async () => {
+      if (!confirm('Duplicate kullanıcıları silmek istediğinize emin misiniz?')) return;
+
+      const duplicates = await findDuplicateUsers();
+      if (duplicates.length === 0) return;
+
+      log('Duplicate kullanıcılar siliniyor (Firestore)...', 'info');
+      let deleted = 0;
+      for (const d of duplicates) {
+        try {
+          await deleteDoc(doc(db, 'users', d.id));
+          log(`✓ Firestore silindi: ${d.username}`, 'success');
+          deleted++;
+        } catch (e) {
+          log(`✗ Silinemedi: ${d.username} - ${e.message}`, 'error');
+        }
+      }
+      log(`${deleted} duplicate kullanıcı (Firestore) silindi`, 'success');
+      log('NOT: Firebase Auth kullanıcıları Firebase Console\'dan manuel silinmeli!', 'warn');
+      loadStats();
+    };
+
+    window.deleteDuplicateHouseholds = async () => {
+      if (!confirm('Duplicate haneleri silmek istediğinize emin misiniz?')) return;
+
+      const duplicates = await findDuplicateHouseholds();
+      if (duplicates.length === 0) return;
+
+      log('Duplicate haneler siliniyor...', 'info');
+      let deleted = 0;
+      for (const d of duplicates) {
+        try {
+          await deleteDoc(doc(db, 'households', d.id));
+          log(`✓ Silindi: ${d.name}`, 'success');
+          deleted++;
+        } catch (e) {
+          log(`✗ Silinemedi: ${d.name} - ${e.message}`, 'error');
+        }
+      }
+      log(`${deleted} duplicate hane silindi`, 'success');
+      loadStats();
+    };
+
+    window.deleteOrphanAidTransactions = async () => {
+      if (!confirm('Sahipsiz (geçersiz householdId) yardım kayıtlarını silmek istediğinize emin misiniz?')) return;
+
+      log('Sahipsiz yardım kayıtları aranıyor...', 'info');
+      try {
+        const [aidSnap, householdsSnap] = await Promise.all([
+          getDocs(collection(db, 'aid_transactions')),
+          getDocs(collection(db, 'households'))
+        ]);
+
+        const householdIds = new Set(householdsSnap.docs.map(d => d.id));
+        const orphans = aidSnap.docs.filter(d => !householdIds.has(d.data().householdId));
+
+        if (orphans.length === 0) {
+          log('Sahipsiz yardım kaydı yok ✓', 'success');
+          return;
+        }
+
+        log(`${orphans.length} sahipsiz yardım kaydı bulundu, siliniyor...`, 'warn');
+        let deleted = 0;
+        for (const orphan of orphans) {
+          try {
+            await deleteDoc(doc(db, 'aid_transactions', orphan.id));
+            deleted++;
+          } catch (e) {
+            log(`Silinemedi: ${orphan.id}`, 'error');
+          }
+        }
+        log(`${deleted} sahipsiz yardım kaydı silindi`, 'success');
+        loadStats();
+      } catch (e) {
+        log(`Hata: ${e.message}`, 'error');
+      }
+    };
+
+    // ==================== DELETE ALL ====================
+    async function deleteCollection(collectionName) {
+      const snap = await getDocs(collection(db, collectionName));
+      let deleted = 0;
+
+      // Batch delete (500 max per batch)
+      const batchSize = 500;
+      const docs = snap.docs;
+
+      for (let i = 0; i < docs.length; i += batchSize) {
+        const batch = writeBatch(db);
+        const chunk = docs.slice(i, i + batchSize);
+        chunk.forEach(d => batch.delete(d.ref));
+        await batch.commit();
+        deleted += chunk.length;
+        log(`${deleted}/${docs.length} silindi...`, 'info');
+      }
+
+      return deleted;
+    }
+
+    window.deleteAllRegions = async () => {
+      if (!confirm('TÜM bölgeleri silmek istediğinize emin misiniz? Bu işlem GERİ ALINAMAZ!')) return;
+      if (!confirm('GERÇEKTEN EMİN MİSİNİZ?')) return;
+
+      log('Tüm bölgeler siliniyor...', 'warn');
+      const count = await deleteCollection('regions');
+      log(`${count} bölge silindi`, 'success');
+      loadStats();
+    };
+
+    window.deleteAllUsers = async () => {
+      if (!confirm('TÜM kullanıcıları (Firestore) silmek istediğinize emin misiniz? Bu işlem GERİ ALINAMAZ!')) return;
+      if (!confirm('GERÇEKTEN EMİN MİSİNİZ?')) return;
+
+      log('Tüm kullanıcılar siliniyor (Firestore)...', 'warn');
+      const count = await deleteCollection('users');
+      log(`${count} kullanıcı (Firestore) silindi`, 'success');
+      log('NOT: Firebase Auth kullanıcıları Firebase Console\'dan manuel silinmeli!', 'warn');
+      loadStats();
+    };
+
+    window.deleteAllHouseholds = async () => {
+      if (!confirm('TÜM haneleri silmek istediğinize emin misiniz? Bu işlem GERİ ALINAMAZ!')) return;
+      if (!confirm('GERÇEKTEN EMİN MİSİNİZ?')) return;
+
+      log('Tüm haneler siliniyor...', 'warn');
+      const count = await deleteCollection('households');
+      log(`${count} hane silindi`, 'success');
+      loadStats();
+    };
+
+    window.deleteAllAidTransactions = async () => {
+      if (!confirm('TÜM yardım kayıtlarını silmek istediğinize emin misiniz? Bu işlem GERİ ALINAMAZ!')) return;
+      if (!confirm('GERÇEKTEN EMİN MİSİNİZ?')) return;
+
+      log('Tüm yardım kayıtları siliniyor...', 'warn');
+      const count = await deleteCollection('aid_transactions');
+      log(`${count} yardım kaydı silindi`, 'success');
+      loadStats();
+    };
+
+    window.deleteEverything = async () => {
+      if (!confirm('⚠️ DİKKAT! TÜM VERİLERİ silmek istediğinize emin misiniz?')) return;
+      if (!confirm('⚠️ BU İŞLEM GERİ ALINAMAZ! Devam etmek istiyor musunuz?')) return;
+      if (prompt('Onaylamak için "SİL" yazın:') !== 'SİL') {
+        log('İşlem iptal edildi', 'info');
+        return;
+      }
+
+      log('=== TÜM VERİLER SİLİNİYOR ===', 'error');
+
+      log('Yardım kayıtları siliniyor...', 'warn');
+      await deleteCollection('aid_transactions');
+
+      log('Haneler siliniyor...', 'warn');
+      await deleteCollection('households');
+
+      log('Kullanıcılar siliniyor (Firestore)...', 'warn');
+      await deleteCollection('users');
+
+      log('Bölgeler siliniyor...', 'warn');
+      await deleteCollection('regions');
+
+      log('=== TÜM VERİLER SİLİNDİ ===', 'success');
+      log('NOT: Firebase Auth kullanıcıları Firebase Console\'dan manuel silinmeli!', 'warn');
+      loadStats();
+    };
+
+    // Auto load stats on page load
+    window.addEventListener('load', loadStats);
+
+    log('Firebase bağlantısı hazır!', 'success');
+  </script>
+</body>
+</html>
