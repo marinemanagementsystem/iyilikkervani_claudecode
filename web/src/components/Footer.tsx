@@ -44,8 +44,8 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a href="/admin" className="text-white/50 hover:text-white transition-colors text-sm">
-                  admin
+                <a href="/yonetim" className="text-white/70 hover:text-white transition-colors">
+                  Yönetim
                 </a>
               </li>
             </ul>
